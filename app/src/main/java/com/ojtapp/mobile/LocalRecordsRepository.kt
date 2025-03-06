@@ -4,7 +4,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 
@@ -35,8 +34,8 @@ val setupRecordsList = listOf(
 )
 
 class LocalRecordsRepository: RecordsRepository {
-    private val _setupRecords = MutableStateFlow<List<SetupRecord>>(setupRecordsList)
-    private val _giaRecords = MutableStateFlow<List<GiaRecord>>(giaRecordsList)
+    private val _setupRecords = MutableStateFlow(setupRecordsList)
+    private val _giaRecords = MutableStateFlow(giaRecordsList)
 
     override val setupRecords = _setupRecords.asStateFlow()
     override val giaRecords = _giaRecords.asStateFlow()

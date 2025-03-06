@@ -1,12 +1,16 @@
 package com.ojtapp.mobile
 
 import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
@@ -43,7 +47,11 @@ private fun LoginScreen(
     onPasswordChange: (String) -> Unit,
     login: (String, String) -> Unit
 ) {
-    Column {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Dimensions.verticalPadding, Alignment.CenterVertically)
+    ) {
         RarTextField(
             label = "Email",
             value = state.email,
@@ -51,7 +59,7 @@ private fun LoginScreen(
         )
         RarTextField(
             label = "Password",
-            value = state.email,
+            value = state.password,
             onValueChange = onPasswordChange
         )
         RarButton {

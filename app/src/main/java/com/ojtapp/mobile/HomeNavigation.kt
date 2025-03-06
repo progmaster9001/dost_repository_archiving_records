@@ -12,7 +12,9 @@ object Home
 
 fun NavController.navigateToHomeScreen(){
     navigate(Home){
-        popUpToRoute
+        popUpTo<Login>{
+            inclusive = true
+        }
     }
 }
 
@@ -23,7 +25,7 @@ fun NavGraphBuilder.homeScreen(onLogout: () -> Unit){
         })
         MainRoute(
             viewModel = viewModel,
-            onLogout = onLogout
+            logout = onLogout
         )
     }
 }

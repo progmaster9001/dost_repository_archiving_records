@@ -19,8 +19,18 @@ sealed interface RecordState{
     data class Error(val error: String): RecordState
 }
 
+enum class DialogState{
+    OPENED,
+    CLOSED
+}
+
+sealed interface DialogEvent{
+    data object CloseDialog: DialogEvent
+    data object OpenDialog: DialogEvent
+}
+
 class MainViewModel(
-    userRepository: UserRepository,
+    private val userRepository: UserRepository,
     recordsRepository: RecordsRepository
 ): ViewModel(){
 
@@ -32,6 +42,9 @@ class MainViewModel(
 
     private val _currentTab = MutableStateFlow(Type.GIA)
     val currentTab = _currentTab.asStateFlow()
+
+    private val _dialogState = MutableStateFlow(DialogState.CLOSED)
+    val dialogState = _dialogState.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val records: StateFlow<RecordState> = _currentTab
@@ -54,6 +67,17 @@ class MainViewModel(
 
     fun setCurrentTab(tab: Type){
         _currentTab.update { tab }
+    }
+
+    fun toggleDialog(event: DialogEvent){
+        when(event){
+            DialogEvent.CloseDialog -> _dialogState.update { DialogState.CLOSED }
+            DialogEvent.OpenDialog -> _dialogState.update { DialogState.OPENED }
+        }
+    }
+
+    fun clearUser(){
+        userRepository.clearUser()
     }
 
 }

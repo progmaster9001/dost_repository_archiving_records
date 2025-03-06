@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">DOST Rejpository Archiving Records</string>
+    <string name="app_name">DOST Repository Archiving Records</string>
+    <string name="welcome_user">Welcome, %s!</string>
+    <string name="logout_warning">Are you sure you want to logout?</string>
 </resources>

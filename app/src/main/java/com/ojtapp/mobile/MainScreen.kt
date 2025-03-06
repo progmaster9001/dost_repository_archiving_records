@@ -5,11 +5,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContent
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -17,33 +19,46 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun MainRoute(
     modifier: Modifier = Modifier,
     viewModel: MainViewModel,
-    onLogout: () -> Unit
+    logout: () -> Unit
 ) {
 
     val user by viewModel.user.collectAsStateWithLifecycle()
     val currentTab by viewModel.currentTab.collectAsStateWithLifecycle()
     val recordsState by viewModel.records.collectAsStateWithLifecycle()
+    val dialogState by viewModel.dialogState.collectAsStateWithLifecycle()
+
+    if(dialogState == DialogState.OPENED)
+        WarningDialog(onDismissRequest = { viewModel.toggleDialog(DialogEvent.CloseDialog) },
+            onLogout = viewModel::clearUser
+        )
+
+    LaunchedEffect(user) {
+        if(user.token.isEmpty()) logout()
+    }
 
     MainScreen(
         currentTab = currentTab,
         user = user,
         recordsState = recordsState,
-        onSelectedTab = viewModel::setCurrentTab,
-        onLogout = onLogout
+        toggleDialog = viewModel::toggleDialog,
+        onSelectedTab = viewModel::setCurrentTab
     )
+
 }
 
 @Composable
@@ -52,18 +67,21 @@ private fun MainScreen(
     currentTab: Type,
     user: User,
     recordsState: RecordState,
-    onSelectedTab: (Type) -> Unit,
-    onLogout: () -> Unit
+    toggleDialog: (DialogEvent) -> Unit,
+    onSelectedTab: (Type) -> Unit
 ) {
     Scaffold(
-        contentWindowInsets = WindowInsets.safeContent
+        contentWindowInsets = WindowInsets.safeDrawing
     ) { innerPadding ->
         Column(
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(Dimensions.containerPadding).padding(innerPadding)
         ) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(user.name)
-                IconButton(onLogout) { Icon(imageVector = Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "logout_icon")}
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = Dimensions.horizontalPadding), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.welcome_user, user.name),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                IconButton(onClick = { toggleDialog(DialogEvent.OpenDialog) }) { Icon(imageVector = Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "logout_icon")}
             }
             TypeTabRow(
                 selectedTabIndex = currentTab.ordinal,
@@ -110,9 +128,10 @@ fun RecordsList(
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = modifier.fillMaxSize().padding(horizontal = Dimensions.horizontalPadding),
+        verticalArrangement = Arrangement.spacedBy(Dimensions.basicSpacing)
     ) {
+        item { Spacer(Modifier.height(Dimensions.basicSpacing)) }
         items(records.filter {
             (currentTab == Type.GIA && it is GiaRecord) || (currentTab == Type.SETUP && it is SetupRecord)
         }) { record ->
@@ -123,5 +142,6 @@ fun RecordsList(
             }
             Text(text = text)
         }
+        item { Spacer(Modifier.height(Dimensions.basicSpacing)) }
     }
 }

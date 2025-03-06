@@ -11,7 +11,9 @@ object Login
 
 fun NavController.navigateToLogin(){
     navigate(Login){
-        popUpToRoute
+        popUpTo<Home>{
+            inclusive = true
+        }
     }
 }
 
@@ -20,6 +22,6 @@ fun NavGraphBuilder.loginScreen(onLogin: () -> Unit){
         val loginViewModel: LoginViewModel = viewModel(factory = GenericViewModelFactory {
             LoginViewModel(LocalAuthRepository(), ServiceLocator.getUserRepository())
         })
-        LoginRoute(viewModel = loginViewModel,onLogin = onLogin)
+        LoginRoute(viewModel = loginViewModel, onLogin = onLogin)
     }
 }

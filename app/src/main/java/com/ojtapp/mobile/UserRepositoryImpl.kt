@@ -11,6 +11,10 @@ class UserRepositoryImpl(
     private val _user = MutableStateFlow(userPreference.user)
     override val user = _user.asStateFlow()
 
+    override fun clearUser() {
+        userPreference.clearUser()
+    }
+
     override fun updateUser(newUser: User) {
         _user.update { newUser }
         userPreference.user = newUser
