@@ -1,5 +1,7 @@
 package com.ojtapp.mobile
 
+import kotlin.reflect.full.primaryConstructor
+
 data class SetupRecord(
     val id: Int,
     val firmName: String,
@@ -9,3 +11,5 @@ data class SetupRecord(
     val status: String,
     val sectorName: String
 ): Record
+
+val setupFieldNames = SetupRecord::class.primaryConstructor?.parameters?.map { it.name }

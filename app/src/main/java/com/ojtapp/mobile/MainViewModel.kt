@@ -24,6 +24,11 @@ enum class DialogState{
     CLOSED
 }
 
+enum class Layout{
+    CARD,
+    TABLE
+}
+
 sealed interface DialogEvent{
     data object CloseDialog: DialogEvent
     data object OpenDialog: DialogEvent
@@ -42,6 +47,9 @@ class MainViewModel(
 
     private val _currentTab = MutableStateFlow(Type.GIA)
     val currentTab = _currentTab.asStateFlow()
+
+    private val _currentLayout = MutableStateFlow(Layout.TABLE)
+    val currentLayout = _currentLayout.asStateFlow()
 
     private val _dialogState = MutableStateFlow(DialogState.CLOSED)
     val dialogState = _dialogState.asStateFlow()
@@ -64,6 +72,10 @@ class MainViewModel(
             started = SharingStarted.Lazily,
             initialValue = RecordState.Loading
         )
+
+    fun setCurrentLayout(){
+        _currentLayout.update { if(_currentLayout.value == Layout.CARD) Layout.TABLE else Layout.CARD }
+    }
 
     fun setCurrentTab(tab: Type){
         _currentTab.update { tab }
