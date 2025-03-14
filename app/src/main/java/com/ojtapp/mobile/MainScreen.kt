@@ -4,17 +4,23 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -23,14 +29,27 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.composables.core.SheetDetent
+import com.composables.core.rememberModalBottomSheetState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun MainRoute(
@@ -42,7 +61,9 @@ fun MainRoute(
     val user by viewModel.user.collectAsStateWithLifecycle()
     val currentTab by viewModel.currentTab.collectAsStateWithLifecycle()
     val currentLayout by viewModel.currentLayout.collectAsStateWithLifecycle()
-    val recordsState by viewModel.records.collectAsStateWithLifecycle()
+    val recordsState by viewModel.filteredRecords.collectAsStateWithLifecycle()
+    val giaRecordFilterState by viewModel.giaRecordFilter.collectAsStateWithLifecycle()
+    val setupRecordFilterState by viewModel.setupRecordFilter.collectAsStateWithLifecycle()
     val dialogState by viewModel.dialogState.collectAsStateWithLifecycle()
 
     if(dialogState == DialogState.OPENED)
@@ -58,37 +79,57 @@ fun MainRoute(
         currentTab = currentTab,
         currentLayout = currentLayout,
         user = user,
+        giaFilterState = giaRecordFilterState,
+        setupFilterState = setupRecordFilterState,
+        filterEvent = viewModel::filterEvent,
         recordsState = recordsState,
         toggleDialog = viewModel::toggleDialog,
         onSelectedTab = viewModel::setCurrentTab,
         setLayout = viewModel::setCurrentLayout
     )
-
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MainScreen(
     modifier: Modifier = Modifier,
     currentTab: Type,
     currentLayout: Layout,
     user: User,
+    giaFilterState: GiaRecordFilterCriteria,
+    setupFilterState: SetupRecordFilterCriteria,
+    filterEvent: (FilterEvent) -> Unit,
     recordsState: RecordState,
     toggleDialog: (DialogEvent) -> Unit,
     setLayout: () -> Unit,
     onSelectedTab: (Type) -> Unit
 ) {
-    var shouldShowFilterSheet by remember { mutableStateOf(false) }
+
+    val sheetState = rememberModalBottomSheetState(
+        initialDetent = SheetDetent.Hidden
+    )
+
     Scaffold(
-        contentWindowInsets = WindowInsets.safeDrawing,
         floatingActionButton = {
-            FloatingActionButton(onClick = { shouldShowFilterSheet = !shouldShowFilterSheet }) {
+            FloatingActionButton(onClick = { sheetState.currentDetent = SheetDetent.FullyExpanded }) {
                 Icon(
                     imageVector = Icons.Default.Info,
                     contentDescription = "drawer_fab"
                 )
             }
-        }
+        },
+        contentWindowInsets = WindowInsets.safeContent,
     ) { innerPadding ->
+        FilterSheet(
+            sheetState = sheetState,
+            onDismissRequest = { sheetState.currentDetent = SheetDetent.Hidden }
+        ) {
+            FilterContent(currentTab, giaFilterState, setupFilterState,
+                { event ->
+                    filterEvent(event)
+                }
+            )
+        }
         Column(
             modifier = Modifier
                 .padding(Dimensions.containerPadding)
@@ -107,6 +148,7 @@ private fun MainScreen(
                 selectedTabIndex = currentTab.ordinal,
                 onSelectedTab = onSelectedTab
             )
+            TopToolbar(onFileClick = {}, setLayout = setLayout)
             RecordsContainer(
                 currentLayout = currentLayout,
                 recordsState = recordsState,
@@ -136,8 +178,16 @@ fun RecordsContainer(
             ) {
                 CircularProgressIndicator()
             }
-            is RecordState.Success -> RecordLayout(currentLayout, state.records, setLayout)
+            is RecordState.Success -> RecordLayout(currentLayout, state.records)
         }
+    }
+}
+
+@Composable
+fun TopToolbar(modifier: Modifier = Modifier, onFileClick: () -> Unit, setLayout: () -> Unit) {
+    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        IconButton(onClick = onFileClick) { Icon(imageVector = Icons.Default.Email, contentDescription = "file_icon")}
+        IconButton(onClick = setLayout) { Icon(imageVector = Icons.Default.Refresh, contentDescription = "layout_icon") }
     }
 }
 
@@ -145,11 +195,9 @@ fun RecordsContainer(
 fun RecordLayout(
     currentLayout: Layout,
     records: List<Record>,
-    setLayout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column {
-        IconButton(onClick = setLayout) { Icon(imageVector = Icons.Default.Refresh, contentDescription = "layout_icon") }
         AnimatedContent(targetState = currentLayout) { layout ->
             when(layout){
                 Layout.CARD -> RecordCardLayout(records)

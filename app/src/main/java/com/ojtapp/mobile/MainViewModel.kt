@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -27,6 +28,11 @@ enum class DialogState{
 enum class Layout{
     CARD,
     TABLE
+}
+
+sealed interface FilterEvent{
+    data object ResetFilter: FilterEvent
+    data class ApplyFilter(val criteria: FilterCriteria): FilterEvent
 }
 
 sealed interface DialogEvent{
@@ -54,8 +60,14 @@ class MainViewModel(
     private val _dialogState = MutableStateFlow(DialogState.CLOSED)
     val dialogState = _dialogState.asStateFlow()
 
+    private val _giaRecordFilter = MutableStateFlow(GiaRecordFilterCriteria())
+    val giaRecordFilter = _giaRecordFilter.asStateFlow()
+
+    private val _setupRecordFilter = MutableStateFlow(SetupRecordFilterCriteria())
+    val setupRecordFilter = _setupRecordFilter.asStateFlow()
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    val records: StateFlow<RecordState> = _currentTab
+    private val records: StateFlow<RecordState> = _currentTab
         .flatMapLatest { tab ->
             recordsRepository.getRecords(tab)
                 .map { resource ->
@@ -72,6 +84,14 @@ class MainViewModel(
             started = SharingStarted.Lazily,
             initialValue = RecordState.Loading
         )
+
+    val filteredRecords = combine(records, _setupRecordFilter, _giaRecordFilter){ state, setup, gia ->
+        filterRecords(state, gia, setup)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Lazily,
+        initialValue = RecordState.Loading
+    )
 
     fun setCurrentLayout(){
         _currentLayout.update { if(_currentLayout.value == Layout.CARD) Layout.TABLE else Layout.CARD }
@@ -92,4 +112,10 @@ class MainViewModel(
         userRepository.clearUser()
     }
 
+    fun filterEvent(event: FilterEvent){
+        when(event){
+            is FilterEvent.ApplyFilter -> if(_currentTab.value == Type.GIA) _giaRecordFilter.update { event.criteria as GiaRecordFilterCriteria } else _setupRecordFilter.update { event.criteria as SetupRecordFilterCriteria }
+            FilterEvent.ResetFilter -> if(_currentTab.value == Type.GIA) _giaRecordFilter.update { GiaRecordFilterCriteria() } else _setupRecordFilter.update { SetupRecordFilterCriteria() }
+        }
+    }
 }

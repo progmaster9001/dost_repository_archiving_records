@@ -62,4 +62,5 @@ dependencies {
     implementation(libs.logging.interceptor)
     implementation(libs.kotlinx.serialization.json)
     implementation(kotlin("reflect"))
+    implementation("com.composables:core:1.20.1")
 }

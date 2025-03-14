@@ -4,10 +4,14 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
@@ -16,12 +20,20 @@ fun RecordTableLayout(
     records: List<Record>,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = Modifier.horizontalScroll(rememberScrollState())
+    Box(
+        modifier = Modifier.verticalScroll(rememberScrollState())
     ) {
-        RecordHeader(records)
-        records.forEach { record ->
-            Row { RarRecord(record) }
+        Column(
+            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
+        ) {
+            if(records.isEmpty()){
+                Text(modifier = Modifier.align(Alignment.CenterHorizontally), text = "No records found.")
+            }else{
+                RecordHeader(records)
+                records.forEach { record ->
+                    Row { RarRecord(record) }
+                }
+            }
         }
     }
 }
@@ -33,15 +45,15 @@ fun RecordHeader(
 ) {
     when(records.first()){
         is GiaRecord -> Row {
-            giaFieldNames?.forEach { column ->
+            giaFieldNames?.forEachIndexed { index, column ->
                 if (column != null)
-                    RarCell(column)
+                    RarCell(column, index = index)
             }
         }
         is SetupRecord -> Row {
-            setupFieldNames?.forEach { column ->
+            setupFieldNames?.forEachIndexed { index, column ->
                 if(column != null)
-                    RarCell(column)
+                    RarCell(column, index = index)
             }
         }
     }
@@ -53,13 +65,13 @@ fun RarRecord(
     modifier: Modifier = Modifier
 ) {
     when (record) {
-        is GiaRecord -> giaFieldNames?.forEach { value ->
+        is GiaRecord -> giaFieldNames?.forEachIndexed { index, value ->
             if(value != null)
-                RarCell(getFieldValue(record, value))
+                RarCell(getFieldValue(record, value), index = index)
         }
-        is SetupRecord -> setupFieldNames?.forEach { value ->
+        is SetupRecord -> setupFieldNames?.forEachIndexed { index, value ->
             if(value != null)
-                RarCell(getFieldValue(record, value))
+                RarCell(getFieldValue(record, value), index = index)
         }
     }
 }
@@ -67,11 +79,14 @@ fun RarRecord(
 @Composable
 fun RarCell(
     value: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    index: Int,
+    size: Int = if(index == 0) 70 else 200,
 ) {
-    Box(modifier = Modifier.width(200.dp)) {
+    Box(modifier = modifier.width(size.dp)) {
         Text(
-            text = value
+            text = value,
+            maxLines = 1
         )
     }
 }

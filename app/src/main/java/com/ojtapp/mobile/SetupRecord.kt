@@ -5,7 +5,7 @@ import kotlin.reflect.full.primaryConstructor
 data class SetupRecord(
     val id: Int,
     val firmName: String,
-    val components: String,
+    val proponent: String,
     val amountApproved: String,
     val yearApproved: Int,
     val status: String,
