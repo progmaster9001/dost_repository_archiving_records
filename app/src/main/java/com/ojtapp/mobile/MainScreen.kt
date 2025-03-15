@@ -21,11 +21,13 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -89,7 +91,6 @@ fun MainRoute(
     )
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MainScreen(
     modifier: Modifier = Modifier,
@@ -108,10 +109,11 @@ private fun MainScreen(
     val sheetState = rememberModalBottomSheetState(
         initialDetent = SheetDetent.Hidden
     )
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = { sheetState.currentDetent = SheetDetent.FullyExpanded }) {
+            SmallFloatingActionButton(onClick = { scope.launch { sheetState.animateTo(SheetDetent.FullyExpanded) } }) {
                 Icon(
                     imageVector = Icons.Default.Info,
                     contentDescription = "drawer_fab"
@@ -122,11 +124,14 @@ private fun MainScreen(
     ) { innerPadding ->
         FilterSheet(
             sheetState = sheetState,
-            onDismissRequest = { sheetState.currentDetent = SheetDetent.Hidden }
+            onDismissRequest = { scope.launch { sheetState.animateTo(SheetDetent.Hidden) } }
         ) {
             FilterContent(currentTab, giaFilterState, setupFilterState,
                 { event ->
                     filterEvent(event)
+                    scope.launch {
+                        sheetState.animateTo(SheetDetent.Hidden)
+                    }
                 }
             )
         }

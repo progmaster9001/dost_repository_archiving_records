@@ -10,6 +10,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -60,6 +61,7 @@ private fun LoginScreen(
         RarTextField(
             label = "Password",
             value = state.password,
+            visualTransformation = PasswordVisualTransformation(),
             onValueChange = onPasswordChange
         )
         RarButton {

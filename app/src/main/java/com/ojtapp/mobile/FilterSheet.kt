@@ -2,12 +2,15 @@ package com.ojtapp.mobile
 
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
@@ -16,7 +19,10 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -28,22 +34,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.composables.core.ModalBottomSheet
 import com.composables.core.ModalBottomSheetState
 import com.composables.core.Scrim
 import com.composables.core.Sheet
+import kotlinx.coroutines.launch
 
 @Composable
 fun FilterSheet(sheetState: ModalBottomSheetState, modifier: Modifier = Modifier, onDismissRequest: () -> Unit, content: @Composable()() -> Unit) {
     ModalBottomSheet(
         state = sheetState,
-        onDismiss = {
-            onDismissRequest()
-        }
+        onDismiss = onDismissRequest
     ) {
         Scrim(
             enter = fadeIn(),
@@ -52,14 +63,11 @@ fun FilterSheet(sheetState: ModalBottomSheetState, modifier: Modifier = Modifier
         Sheet(
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentHeight(unbounded = true)
+                .wrapContentHeight()
                 .windowInsetsPadding(WindowInsets.systemBars)
-                .imePadding()
                 .clip(RoundedCornerShape(topStart = 100f, topEnd = 100f)))
         {
-            Surface{
-                content()
-            }
+            Surface(content = content)
         }
     }
 }
@@ -72,14 +80,19 @@ fun FilterContent(
     filterEvent: (FilterEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    when(currentTab){
-        Type.GIA -> GiaFilterContent(giaFilterState, { filterEvent(FilterEvent.ResetFilter) }, { filterEvent(FilterEvent.ApplyFilter(it))} )
-        Type.SETUP -> SetupFilterContent(setupFilterState,  { filterEvent(FilterEvent.ResetFilter) }, { filterEvent(FilterEvent.ApplyFilter(it))})
+    BoxWithConstraints {
+        val maxHeightInDp = maxHeight.coerceAtMost(LocalConfiguration.current.screenHeightDp.dp * .9f)
+        when(currentTab){
+            Type.GIA -> GiaFilterContent(maxHeightInDp, giaFilterState, { filterEvent(FilterEvent.ResetFilter) }, { filterEvent(FilterEvent.ApplyFilter(it))} )
+            Type.SETUP -> SetupFilterContent(maxHeightInDp, setupFilterState,  { filterEvent(FilterEvent.ResetFilter) }, { filterEvent(FilterEvent.ApplyFilter(it))})
+        }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun GiaFilterContent(
+    maxHeightInDp: Dp,
     giaFilterState: GiaRecordFilterCriteria,
     resetFilter: () -> Unit,
     applyFilter: (FilterCriteria) -> Unit,
@@ -92,9 +105,17 @@ fun GiaFilterContent(
     var minProjectCost by remember { mutableStateOf(giaFilterState.minProjectCost?.toString() ?: "") }
     var maxProjectCost by remember { mutableStateOf(giaFilterState.maxProjectCost?.toString() ?: "") }
 
+    val scrollState = rememberScrollState()
+    val focusRequester = remember { FocusRequester() }
+    val coroutineScope = rememberCoroutineScope()
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+
     Column(
         modifier = modifier
+            .heightIn(max = maxHeightInDp)
+            .imePadding()
             .padding(horizontal = Dimensions.horizontalPadding)
+            .verticalScroll(scrollState)
     ) {
         Text("GIA Filter Criteria", style = MaterialTheme.typography.titleLarge)
 
@@ -103,7 +124,14 @@ fun GiaFilterContent(
             onValueChange = { location = it },
             singleLine = true,
             label = { Text("Location") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester)
+                .onFocusChanged { state ->
+                    if(state.isFocused){
+                        coroutineScope.launch { bringIntoViewRequester.bringIntoView() }
+                    }
+                }
         )
 
         OutlinedTextField(
@@ -187,8 +215,10 @@ fun GiaFilterContent(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SetupFilterContent(
+    maxHeightInDp: Dp,
     setupFilterState: SetupRecordFilterCriteria,
     resetFilter: () -> Unit,
     applyFilter: (FilterCriteria) -> Unit,
@@ -207,9 +237,17 @@ fun SetupFilterContent(
     var minAmountApproved by remember { mutableStateOf(setupFilterState.minAmountApproved?.toString() ?: "") }
     var maxAmountApproved by remember { mutableStateOf(setupFilterState.maxAmountApproved?.toString() ?: "") }
 
+    val scrollState = rememberScrollState()
+    val focusRequester = remember { FocusRequester() }
+    val coroutineScope = rememberCoroutineScope()
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+
     Column(
         modifier = modifier
+            .heightIn(max = maxHeightInDp)
+            .imePadding()
             .padding(horizontal = Dimensions.horizontalPadding)
+            .verticalScroll(scrollState)
     ) {
         Text("SETUP Filter Criteria", style = MaterialTheme.typography.titleLarge)
 
@@ -234,7 +272,14 @@ fun SetupFilterContent(
             onValueChange = { proponentContains = it },
             label = { Text("Proponent Contains") },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester)
+                .onFocusChanged { state ->
+                    if(state.isFocused){
+                        coroutineScope.launch { bringIntoViewRequester.bringIntoView() }
+                    }
+                }
         )
 
         OutlinedTextField(
@@ -277,7 +322,8 @@ fun SetupFilterContent(
                 onValueChange = { maxAmountApproved = it },
                 label = { Text("Max Amount Approved", maxLines = 1) },
                 singleLine = true,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
             )
         }
 
