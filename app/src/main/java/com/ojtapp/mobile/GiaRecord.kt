@@ -14,11 +14,3 @@ data class GiaRecord(
 ): Record
 
 val giaFieldNames = GiaRecord::class.primaryConstructor?.parameters?.map { it.name }
-
-enum class Class{
-
-}
-
-enum class Remark{
-
-}

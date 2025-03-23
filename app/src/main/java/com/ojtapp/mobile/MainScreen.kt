@@ -1,11 +1,13 @@
 package com.ojtapp.mobile
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Email
@@ -42,6 +45,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.composables.core.SheetDetent
@@ -137,15 +141,21 @@ private fun MainScreen(
         }
         Column(
             modifier = Modifier
-                .padding(Dimensions.containerPadding)
                 .padding(innerPadding)
         ) {
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Dimensions.horizontalPadding), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Dimensions.horizontalPadding),
+                verticalAlignment = Alignment.CenterVertically
+                )
+            {
+                Image(painter = painterResource(R.drawable.dost_seal), contentDescription = "dost_logo")
+                Spacer(modifier = Modifier.width(Dimensions.basicSpacing))
                 Text(
                     text = stringResource(R.string.welcome_user, user.name),
-                    style = MaterialTheme.typography.bodyLarge
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.headlineMedium
                 )
                 IconButton(onClick = { toggleDialog(DialogEvent.OpenDialog) }) { Icon(imageVector = Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "logout_icon")}
             }
@@ -153,7 +163,7 @@ private fun MainScreen(
                 selectedTabIndex = currentTab.ordinal,
                 onSelectedTab = onSelectedTab
             )
-            TopToolbar(onFileClick = {}, setLayout = setLayout)
+            TopToolbar(isTableLayout = currentLayout == Layout.TABLE, onFileClick = {}, setLayout = setLayout)
             RecordsContainer(
                 currentLayout = currentLayout,
                 recordsState = recordsState,
@@ -189,10 +199,10 @@ fun RecordsContainer(
 }
 
 @Composable
-fun TopToolbar(modifier: Modifier = Modifier, onFileClick: () -> Unit, setLayout: () -> Unit) {
+fun TopToolbar(modifier: Modifier = Modifier, isTableLayout: Boolean, onFileClick: () -> Unit, setLayout: () -> Unit) {
     Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         IconButton(onClick = onFileClick) { Icon(imageVector = Icons.Default.Email, contentDescription = "file_icon")}
-        IconButton(onClick = setLayout) { Icon(imageVector = Icons.Default.Refresh, contentDescription = "layout_icon") }
+        LayoutSwitch(isTableLayout = isTableLayout, setLayout = setLayout )
     }
 }
 

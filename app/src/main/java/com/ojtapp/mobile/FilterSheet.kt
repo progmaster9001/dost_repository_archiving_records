@@ -56,16 +56,13 @@ fun FilterSheet(sheetState: ModalBottomSheetState, modifier: Modifier = Modifier
         state = sheetState,
         onDismiss = onDismissRequest
     ) {
-        Scrim(
-            enter = fadeIn(),
-            exit = fadeOut()
-        )
+        Scrim()
         Sheet(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
                 .windowInsetsPadding(WindowInsets.systemBars)
-                .clip(RoundedCornerShape(topStart = 100f, topEnd = 100f)))
+            )
         {
             Surface(content = content)
         }
@@ -80,7 +77,9 @@ fun FilterContent(
     filterEvent: (FilterEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    BoxWithConstraints {
+    BoxWithConstraints(
+        modifier = modifier.padding(Dimensions.containerPadding),
+    ) {
         val maxHeightInDp = maxHeight.coerceAtMost(LocalConfiguration.current.screenHeightDp.dp * .9f)
         when(currentTab){
             Type.GIA -> GiaFilterContent(maxHeightInDp, giaFilterState, { filterEvent(FilterEvent.ResetFilter) }, { filterEvent(FilterEvent.ApplyFilter(it))} )
@@ -123,7 +122,7 @@ fun GiaFilterContent(
             value = location,
             onValueChange = { location = it },
             singleLine = true,
-            label = { Text("Location") },
+            label = { Text("Location", maxLines = 1) },
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(focusRequester)
@@ -137,7 +136,7 @@ fun GiaFilterContent(
         OutlinedTextField(
             value = classNameContains,
             onValueChange = { classNameContains = it },
-            label = { Text("Class Name Contains") },
+            label = { Text("Class Name Contains", maxLines = 1) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -145,7 +144,7 @@ fun GiaFilterContent(
         OutlinedTextField(
             value = beneficiaryContains,
             onValueChange = { beneficiaryContains = it },
-            label = { Text("Beneficiary Contains") },
+            label = { Text("Beneficiary Contains", maxLines = 1) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -153,7 +152,7 @@ fun GiaFilterContent(
         OutlinedTextField(
             value = remarksContains,
             onValueChange = { remarksContains = it },
-            label = { Text("Remarks Contains") },
+            label = { Text("Remarks Contains", maxLines = 1) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -162,7 +161,7 @@ fun GiaFilterContent(
             OutlinedTextField(
                 value = minProjectCost,
                 onValueChange = { minProjectCost = it },
-                label = { Text("Min Project Cost") },
+                label = { Text("Min Project Cost", maxLines = 1) },
                 singleLine = true,
                 modifier = Modifier.weight(1f)
             )
@@ -170,7 +169,7 @@ fun GiaFilterContent(
             OutlinedTextField(
                 value = maxProjectCost,
                 onValueChange = { maxProjectCost = it },
-                label = { Text("Max Project Cost") },
+                label = { Text("Max Project Cost", maxLines = 1) },
                 singleLine = true,
                 modifier = Modifier.weight(1f)
             )
@@ -249,8 +248,10 @@ fun SetupFilterContent(
             .padding(horizontal = Dimensions.horizontalPadding)
             .verticalScroll(scrollState)
     ) {
-        Text("SETUP Filter Criteria", style = MaterialTheme.typography.titleLarge)
-
+        Text(
+            "SETUP Filter Criteria",
+            style = MaterialTheme.typography.titleLarge
+        )
 
         MultiSelectChipRow(
             title = "Select Multiple Sectors",
@@ -378,7 +379,11 @@ fun MultiSelectChipRow(
     onSelectionChanged: (List<String>) -> Unit
 ) {
     Column {
-        Text(title, style = MaterialTheme.typography.titleMedium)
+        Text(
+            title,
+            color = MaterialTheme.colorScheme.outline,
+            style = MaterialTheme.typography.titleSmall
+        )
         LazyRow {
             items(options) { option ->
                 val selected = option in selectedOptions
