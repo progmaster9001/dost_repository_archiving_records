@@ -44,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -115,17 +116,7 @@ private fun MainScreen(
     )
     val scope = rememberCoroutineScope()
 
-    Scaffold(
-        floatingActionButton = {
-            SmallFloatingActionButton(onClick = { scope.launch { sheetState.animateTo(SheetDetent.FullyExpanded) } }) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "drawer_fab"
-                )
-            }
-        },
-        contentWindowInsets = WindowInsets.safeContent,
-    ) { innerPadding ->
+    Scaffold{ innerPadding ->
         FilterSheet(
             sheetState = sheetState,
             onDismissRequest = { scope.launch { sheetState.animateTo(SheetDetent.Hidden) } }
@@ -163,7 +154,11 @@ private fun MainScreen(
                 selectedTabIndex = currentTab.ordinal,
                 onSelectedTab = onSelectedTab
             )
-            TopToolbar(isTableLayout = currentLayout == Layout.TABLE, onFileClick = {}, setLayout = setLayout)
+            TopToolbar(
+                isTableLayout = currentLayout == Layout.TABLE,
+                openFilterSheet = {  scope.launch { sheetState.animateTo(SheetDetent.FullyExpanded) }},
+                setLayout = setLayout
+            )
             RecordsContainer(
                 currentLayout = currentLayout,
                 recordsState = recordsState,
@@ -199,10 +194,10 @@ fun RecordsContainer(
 }
 
 @Composable
-fun TopToolbar(modifier: Modifier = Modifier, isTableLayout: Boolean, onFileClick: () -> Unit, setLayout: () -> Unit) {
+fun TopToolbar(modifier: Modifier = Modifier, isTableLayout: Boolean, openFilterSheet: () -> Unit, setLayout: () -> Unit) {
     Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        IconButton(onClick = onFileClick) { Icon(imageVector = Icons.Default.Email, contentDescription = "file_icon")}
-        LayoutSwitch(isTableLayout = isTableLayout, setLayout = setLayout )
+        IconButton(onClick = openFilterSheet) { Icon(imageVector = Icons.Default.Email, contentDescription = "file_icon")}
+        LayoutSwitch(isTableLayout = isTableLayout, setLayout = setLayout)
     }
 }
 

@@ -4,6 +4,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,10 +14,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -29,6 +34,7 @@ fun RecordTableLayout(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Dimensions.basicSpacing)
     ) {
+        item { Spacer(modifier = Modifier.height(Dimensions.basicSpacing) )}
         if (records.isEmpty()) item { Text("No records found.") }
         item {  RecordHeader(records) }
         itemsIndexed(records, key = { index, _ ->  index}){ _, record ->
@@ -46,13 +52,19 @@ fun RecordHeader(
         is GiaRecord -> Row {
             giaFieldNames?.forEachIndexed { index, column ->
                 if (column != null)
-                    RarCell(column, index = index)
+                    RarCell(
+                        column, index = index,
+                        color = MaterialTheme.colorScheme.outline
+                    )
             }
         }
         is SetupRecord -> Row {
             setupFieldNames?.forEachIndexed { index, column ->
                 if(column != null)
-                    RarCell(column, index = index)
+                    RarCell(
+                        column, index = index,
+                        color = MaterialTheme.colorScheme.outline
+                    )
             }
         }
     }
@@ -66,11 +78,17 @@ fun RarRecord(
     when (record) {
         is GiaRecord -> giaFieldNames?.forEachIndexed { index, value ->
             if(value != null)
-                RarCell(getFieldValue(record, value), index = index)
+                RarCell(
+                    getFieldValue(record, value),
+                    index = index,
+                    fontWeight = if(index == 1) FontWeight.SemiBold else LocalTextStyle.current.fontWeight)
         }
         is SetupRecord -> setupFieldNames?.forEachIndexed { index, value ->
             if(value != null)
-                RarCell(getFieldValue(record, value), index = index)
+                RarCell(
+                    getFieldValue(record, value),
+                    index = index,
+                    fontWeight = if(index == 1) FontWeight.SemiBold else LocalTextStyle.current.fontWeight)
         }
     }
 }
@@ -79,6 +97,8 @@ fun RarRecord(
 fun RarCell(
     value: String,
     modifier: Modifier = Modifier,
+    color: Color = LocalTextStyle.current.color,
+    fontWeight: FontWeight? = LocalTextStyle.current.fontWeight,
     isLastIndex: Boolean = false,
     index: Int,
     size: Int = if(index == 0) 70 else 200,
@@ -89,7 +109,9 @@ fun RarCell(
                 if(index == 0) Spacer(modifier = Modifier.width(Dimensions.basicSpacing))
                 Text(
                     text = value,
-                    maxLines = 1
+                    color = color,
+                    maxLines = 1,
+                    fontWeight = fontWeight,
                 )
                 if(isLastIndex) Spacer(modifier = Modifier.height(Dimensions.basicSpacing))
             }

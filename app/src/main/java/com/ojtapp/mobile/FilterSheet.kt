@@ -24,6 +24,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -41,7 +42,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.composables.core.ModalBottomSheet
@@ -188,9 +191,10 @@ fun GiaFilterContent(
                     minProjectCost = ""
                     maxProjectCost = ""
                 },
+                colors = ButtonDefaults.textButtonColors().copy(contentColor = MaterialTheme.colorScheme.error),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Reset")
+                Text("Reset", fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.width(8.dp))
             Button(
@@ -206,9 +210,11 @@ fun GiaFilterContent(
                         )
                     )
                 },
+                colors = ButtonDefaults.buttonColors().copy(containerColor = Color(133, 224, 224, 255)),
+                shape = RoundedCornerShape(20f),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Apply")
+                Text("Apply", fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -343,9 +349,10 @@ fun SetupFilterContent(
                     minAmountApproved = ""
                     maxAmountApproved = ""
                 },
+                colors = ButtonDefaults.textButtonColors().copy(contentColor = MaterialTheme.colorScheme.error),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Reset")
+                Text("Reset", fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.width(8.dp))
             Button(
@@ -363,9 +370,11 @@ fun SetupFilterContent(
                         )
                     )
                 },
+                colors = ButtonDefaults.buttonColors().copy(containerColor = Color(133, 224, 224, 255)),
+                shape = RoundedCornerShape(20f),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Apply")
+                Text("Apply", fontWeight = FontWeight.Bold)
             }
         }
     }
