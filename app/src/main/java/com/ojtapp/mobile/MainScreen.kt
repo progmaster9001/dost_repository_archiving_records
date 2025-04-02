@@ -2,61 +2,44 @@ package com.ojtapp.mobile
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContent
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FabPosition
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.composables.core.SheetDetent
 import com.composables.core.rememberModalBottomSheetState
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @Composable
 fun MainRoute(
@@ -155,7 +138,10 @@ private fun MainScreen(
                 onSelectedTab = onSelectedTab
             )
             TopToolbar(
+                currentTab = currentTab,
                 isTableLayout = currentLayout == Layout.TABLE,
+                giaFilterState = giaFilterState,
+                setupFilterState = setupFilterState,
                 openFilterSheet = {  scope.launch { sheetState.animateTo(SheetDetent.FullyExpanded) }},
                 setLayout = setLayout
             )
@@ -193,10 +179,239 @@ fun RecordsContainer(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun TopToolbar(modifier: Modifier = Modifier, isTableLayout: Boolean, openFilterSheet: () -> Unit, setLayout: () -> Unit) {
-    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+fun TopToolbar(
+    currentTab: Type,
+    modifier: Modifier = Modifier,
+    giaFilterState: GiaRecordFilterCriteria,
+    setupFilterState: SetupRecordFilterCriteria,
+    isTableLayout: Boolean,
+    openFilterSheet: () -> Unit,
+    setLayout: () -> Unit
+) {
+    Row(modifier = modifier.fillMaxWidth()) {
+        Surface(
+            contentColor = MaterialTheme.colorScheme.outline,
+            modifier = Modifier.weight(1f)
+        ) {
+            CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.labelSmall) {
+                Column(
+                    modifier = Modifier.padding(Dimensions.containerPadding)
+                ){
+                    when(currentTab){
+                        Type.GIA -> {
+                            if(
+                                giaFilterState.location != null ||
+                                giaFilterState.classNameContains != null ||
+                                giaFilterState.beneficiaryContains != null ||
+                                giaFilterState.remarksContains != null ||
+                                giaFilterState.minProjectCost != null ||
+                                giaFilterState.maxProjectCost != null ||
+                                giaFilterState.projectDurationRange != null
+                            )
+                            {
+                                giaFilterState.location?.let { Text(
+                                    text = buildAnnotatedString {
+                                        withStyle(style = SpanStyle(
+                                            fontWeight = FontWeight.Black
+                                        )){
+                                            append("Location: ")
+                                        }
+                                        append(it)
+                                    },
+                                ) }
+                                giaFilterState.remarksContains?.let { Text(
+                                    text = buildAnnotatedString {
+                                        withStyle(style = SpanStyle(
+                                            fontWeight = FontWeight.Black
+                                        )){
+                                            append("Remarks: ")
+                                        }
+                                        append(it)
+                                    },
+                                ) }
+                                giaFilterState.classNameContains?.let { Text(
+                                    text = buildAnnotatedString {
+                                        withStyle(style = SpanStyle(
+                                            fontWeight = FontWeight.Black
+                                        )){
+                                            append("Class Name: ")
+                                        }
+                                        append(it)
+                                    },
+                                ) }
+                                giaFilterState.beneficiaryContains?.let { Text(
+                                    text = buildAnnotatedString {
+                                        withStyle(style = SpanStyle(
+                                            fontWeight = FontWeight.Black
+                                        )){
+                                            append("Beneficiary: ")
+                                        }
+                                        append(it)
+                                    },
+                                ) }
+                                giaFilterState.minProjectCost?.let { Text(
+                                    text = buildAnnotatedString {
+                                        withStyle(style = SpanStyle(
+                                            fontWeight = FontWeight.Black
+                                        )){
+                                            append("Minimum Project Cost: ")
+                                        }
+                                        append("$it")
+                                    },
+                                ) }
+                                giaFilterState.maxProjectCost?.let { Text(
+                                    text = buildAnnotatedString {
+                                        withStyle(style = SpanStyle(
+                                            fontWeight = FontWeight.Black
+                                        )){
+                                            append("Max Project Cost: ")
+                                        }
+                                        append("$it")
+                                    },
+                                ) }
+                                giaFilterState.projectDurationRange?.let { Text(
+                                    text = buildAnnotatedString {
+                                        withStyle(style = SpanStyle(
+                                            fontWeight = FontWeight.Black
+                                        )){
+                                            append("Project Duration: ")
+                                        }
+                                        append("$it")
+                                    },
+                                ) }
+                            }else{
+                                Text("No filter applied.")
+                            }
+                        }
+                        Type.SETUP -> {
+                            if(
+                                setupFilterState.statusIn != null ||
+                                setupFilterState.sectorNameIn != null ||
+                                setupFilterState.sectorName != null ||
+                                setupFilterState.firmNameContains != null ||
+                                setupFilterState.proponentContains != null ||
+                                setupFilterState.minYearApproved != null ||
+                                setupFilterState.maxYearApproved != null ||
+                                setupFilterState.minAmountApproved != null ||
+                                setupFilterState.maxAmountApproved != null
+                            )
+                            {
+                                setupFilterState.sectorNameIn?.let {
+                                    Row {
+                                        Text(
+                                            text = buildAnnotatedString {
+                                                withStyle(style = SpanStyle(
+                                                    fontWeight = FontWeight.Black
+                                                )){
+                                                    append("Selected Sectors: ")
+                                                }
+                                            },
+                                        )
+                                        FlowRow {
+                                            it.forEachIndexed { index, value -> Text(if(it.size == (index + 1)) value else "$value, ") }
+                                        }
+                                    }
+                                }
+                                setupFilterState.statusIn?.let {
+                                    Row {
+                                        Text(
+                                            text = buildAnnotatedString {
+                                                withStyle(style = SpanStyle(
+                                                    fontWeight = FontWeight.Black
+                                                )){
+                                                    append("Selected Statuses: ")
+                                                }
+                                            },
+                                        )
+                                        FlowRow {
+                                            it.forEachIndexed { index, value -> Text(if(it.size == (index + 1)) value else "$value, ") }
+                                        }
+                                    }
+                                }
+                                setupFilterState.proponentContains?.let {
+                                    Text(
+                                        text = buildAnnotatedString {
+                                            withStyle(style = SpanStyle(
+                                                fontWeight = FontWeight.Black
+                                            )){
+                                                append("Proponent: ")
+                                            }
+                                            append(it)
+                                        },
+                                    )
+                                }
+                                setupFilterState.firmNameContains?.let {
+                                    Text(
+                                        text = buildAnnotatedString {
+                                            withStyle(style = SpanStyle(
+                                                fontWeight = FontWeight.Black
+                                            )){
+                                                append("Firm Name: ")
+                                            }
+                                            append(it)
+                                        },
+                                    )
+                                }
+                                setupFilterState.minYearApproved?.let {
+                                    Text(
+                                        text = buildAnnotatedString {
+                                            withStyle(style = SpanStyle(
+                                                fontWeight = FontWeight.Black
+                                            )){
+                                                append("Min year Approved: ")
+                                            }
+                                            append("$it")
+                                        },
+                                    )
+                                }
+                                setupFilterState.maxYearApproved?.let {
+                                    Text(
+                                        text = buildAnnotatedString {
+                                            withStyle(style = SpanStyle(
+                                                fontWeight = FontWeight.Black
+                                            )){
+                                                append("Max Year Approved: ")
+                                            }
+                                            append("$it")
+                                        },
+                                    )
+                                }
+                                setupFilterState.minAmountApproved?.let {
+                                    Text(
+                                        text = buildAnnotatedString {
+                                            withStyle(style = SpanStyle(
+                                                fontWeight = FontWeight.Black
+                                            )){
+                                                append("Min Amount Approved: ")
+                                            }
+                                            append("$it")
+                                        },
+                                    )
+                                }
+                                setupFilterState.maxAmountApproved?.let {
+                                    Text(
+                                        text = buildAnnotatedString {
+                                            withStyle(style = SpanStyle(
+                                                fontWeight = FontWeight.Black
+                                            )){
+                                                append("Max Amount Approved: ")
+                                            }
+                                            append("$it")
+                                        },
+                                    )
+                                }
+                            }else{
+                                Text("No filter applied.")
+                            }
+                        }
+                    }
+                }
+            }
+        }
         IconButton(onClick = openFilterSheet) { Icon(imageVector = Icons.Default.Email, contentDescription = "file_icon")}
+        Spacer(Modifier.width(Dimensions.basicSpacing))
         LayoutSwitch(isTableLayout = isTableLayout, setLayout = setLayout)
     }
 }

@@ -21,10 +21,10 @@ fun RecordCardLayout(
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        modifier = modifier,
+        modifier = modifier.padding(horizontal = Dimensions.horizontalPadding),
         verticalArrangement = Arrangement.spacedBy(Dimensions.basicSpacing)
     ) {
-        item { Spacer(modifier = Modifier.height(Dimensions.verticalPadding) )}
+        item { Spacer(modifier = Modifier.height(Dimensions.basicSpacing) )}
         if(records.isEmpty()){
             item { Text(modifier = Modifier.fillMaxWidth(), text = "No records found", textAlign = TextAlign.Center) }
         }else{

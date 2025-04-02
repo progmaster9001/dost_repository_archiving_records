@@ -3,14 +3,20 @@ package com.ojtapp.mobile
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.anchoredDraggable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imeNestedScroll
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
@@ -20,6 +26,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -41,12 +48,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.composables.core.DragIndication
 import com.composables.core.ModalBottomSheet
 import com.composables.core.ModalBottomSheetState
 import com.composables.core.Scrim
@@ -64,8 +74,7 @@ fun FilterSheet(sheetState: ModalBottomSheetState, modifier: Modifier = Modifier
             modifier = modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .windowInsetsPadding(WindowInsets.systemBars)
-            )
+                .windowInsetsPadding(WindowInsets.systemBars))
         {
             Surface(content = content)
         }
@@ -77,16 +86,16 @@ fun FilterContent(
     currentTab: Type,
     giaFilterState: GiaRecordFilterCriteria,
     setupFilterState: SetupRecordFilterCriteria,
-    filterEvent: (FilterEvent) -> Unit,
-    modifier: Modifier = Modifier
+    filterEvent: (FilterEvent) -> Unit
 ) {
     BoxWithConstraints(
-        modifier = modifier.padding(Dimensions.containerPadding),
+        modifier = Modifier.padding(Dimensions.containerPadding),
     ) {
         val maxHeightInDp = maxHeight.coerceAtMost(LocalConfiguration.current.screenHeightDp.dp * .9f)
+        val modifier = Modifier.heightIn(max = maxHeightInDp).imePadding()
         when(currentTab){
-            Type.GIA -> GiaFilterContent(maxHeightInDp, giaFilterState, { filterEvent(FilterEvent.ResetFilter) }, { filterEvent(FilterEvent.ApplyFilter(it))} )
-            Type.SETUP -> SetupFilterContent(maxHeightInDp, setupFilterState,  { filterEvent(FilterEvent.ResetFilter) }, { filterEvent(FilterEvent.ApplyFilter(it))})
+            Type.GIA -> GiaFilterContent(maxHeightInDp, giaFilterState, { filterEvent(FilterEvent.ResetFilter) }, { filterEvent(FilterEvent.ApplyFilter(it))}, modifier )
+            Type.SETUP -> SetupFilterContent(maxHeightInDp, setupFilterState,  { filterEvent(FilterEvent.ResetFilter) }, { filterEvent(FilterEvent.ApplyFilter(it))}, modifier)
         }
     }
 }
@@ -100,12 +109,14 @@ fun GiaFilterContent(
     applyFilter: (FilterCriteria) -> Unit,
     modifier: Modifier = Modifier
 ) {
+
     var location by remember { mutableStateOf(giaFilterState.location ?: "") }
     var classNameContains by remember { mutableStateOf(giaFilterState.classNameContains ?: "") }
     var beneficiaryContains by remember { mutableStateOf(giaFilterState.beneficiaryContains ?: "") }
     var remarksContains by remember { mutableStateOf(giaFilterState.remarksContains ?: "") }
     var minProjectCost by remember { mutableStateOf(giaFilterState.minProjectCost?.toString() ?: "") }
     var maxProjectCost by remember { mutableStateOf(giaFilterState.maxProjectCost?.toString() ?: "") }
+    var sizeChange by remember { mutableStateOf(0.dp) }
 
     val scrollState = rememberScrollState()
     val focusRequester = remember { FocusRequester() }
@@ -114,8 +125,6 @@ fun GiaFilterContent(
 
     Column(
         modifier = modifier
-            .heightIn(max = maxHeightInDp)
-            .imePadding()
             .padding(horizontal = Dimensions.horizontalPadding)
             .verticalScroll(scrollState)
     ) {
@@ -129,8 +138,8 @@ fun GiaFilterContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(focusRequester)
-                .onFocusChanged { state ->
-                    if(state.isFocused){
+                .onFocusChanged {
+                    if(it.isFocused){
                         coroutineScope.launch { bringIntoViewRequester.bringIntoView() }
                     }
                 }
@@ -249,8 +258,6 @@ fun SetupFilterContent(
 
     Column(
         modifier = modifier
-            .heightIn(max = maxHeightInDp)
-            .imePadding()
             .padding(horizontal = Dimensions.horizontalPadding)
             .verticalScroll(scrollState)
     ) {
@@ -380,6 +387,7 @@ fun SetupFilterContent(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MultiSelectChipRow(
     title: String,
@@ -393,8 +401,10 @@ fun MultiSelectChipRow(
             color = MaterialTheme.colorScheme.outline,
             style = MaterialTheme.typography.titleSmall
         )
-        LazyRow {
-            items(options) { option ->
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ){
+            options.forEach { option ->
                 val selected = option in selectedOptions
                 FilterChip(
                     selected = selected,
@@ -406,8 +416,7 @@ fun MultiSelectChipRow(
                         }
                         onSelectionChanged(newSelection)
                     },
-                    label = { Text(option) },
-                    modifier = Modifier.padding(4.dp)
+                    label = { Text(option) }
                 )
             }
         }
