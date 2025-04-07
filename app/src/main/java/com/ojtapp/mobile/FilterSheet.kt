@@ -1,40 +1,46 @@
 package com.ojtapp.mobile
 
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.anchoredDraggable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imeNestedScroll
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalBottomSheetDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,40 +51,33 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.composables.core.DragIndication
-import com.composables.core.ModalBottomSheet
-import com.composables.core.ModalBottomSheetState
-import com.composables.core.Scrim
-import com.composables.core.Sheet
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FilterSheet(sheetState: ModalBottomSheetState, modifier: Modifier = Modifier, onDismissRequest: () -> Unit, content: @Composable()() -> Unit) {
+fun FilterSheet(
+    modifier: Modifier = Modifier,
+    sheetState: SheetState,
+    onDismissRequest: () -> Unit,
+    content: @Composable ()(ColumnScope.() -> Unit)
+) {
     ModalBottomSheet(
-        state = sheetState,
-        onDismiss = onDismissRequest
-    ) {
-        Scrim()
-        Sheet(
-            modifier = modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .windowInsetsPadding(WindowInsets.systemBars))
-        {
-            Surface(content = content)
-        }
-    }
+        onDismissRequest = onDismissRequest,
+        modifier = Modifier.systemBarsPadding(),
+        scrimColor = BottomSheetDefaults.ScrimColor.copy(alpha = .2f),
+        sheetState = sheetState,
+        dragHandle = null,
+        content = content
+    )
 }
 
 @Composable
@@ -88,14 +87,15 @@ fun FilterContent(
     setupFilterState: SetupRecordFilterCriteria,
     filterEvent: (FilterEvent) -> Unit
 ) {
-    BoxWithConstraints(
-        modifier = Modifier.padding(Dimensions.containerPadding),
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = Dimensions.verticalPadding)
+            .imePadding()
     ) {
-        val maxHeightInDp = maxHeight.coerceAtMost(LocalConfiguration.current.screenHeightDp.dp * .9f)
-        val modifier = Modifier.heightIn(max = maxHeightInDp).imePadding()
         when(currentTab){
-            Type.GIA -> GiaFilterContent(maxHeightInDp, giaFilterState, { filterEvent(FilterEvent.ResetFilter) }, { filterEvent(FilterEvent.ApplyFilter(it))}, modifier )
-            Type.SETUP -> SetupFilterContent(maxHeightInDp, setupFilterState,  { filterEvent(FilterEvent.ResetFilter) }, { filterEvent(FilterEvent.ApplyFilter(it))}, modifier)
+            Type.GIA -> GiaFilterContent(giaFilterState, { filterEvent(FilterEvent.ResetFilter) }, { filterEvent(FilterEvent.ApplyFilter(it))} )
+            Type.SETUP -> SetupFilterContent(setupFilterState,  { filterEvent(FilterEvent.ResetFilter) }, { filterEvent(FilterEvent.ApplyFilter(it))} )
         }
     }
 }
@@ -103,7 +103,6 @@ fun FilterContent(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun GiaFilterContent(
-    maxHeightInDp: Dp,
     giaFilterState: GiaRecordFilterCriteria,
     resetFilter: () -> Unit,
     applyFilter: (FilterCriteria) -> Unit,
@@ -139,7 +138,7 @@ fun GiaFilterContent(
                 .fillMaxWidth()
                 .focusRequester(focusRequester)
                 .onFocusChanged {
-                    if(it.isFocused){
+                    if (it.isFocused) {
                         coroutineScope.launch { bringIntoViewRequester.bringIntoView() }
                     }
                 }
@@ -232,7 +231,6 @@ fun GiaFilterContent(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SetupFilterContent(
-    maxHeightInDp: Dp,
     setupFilterState: SetupRecordFilterCriteria,
     resetFilter: () -> Unit,
     applyFilter: (FilterCriteria) -> Unit,
@@ -290,7 +288,7 @@ fun SetupFilterContent(
                 .fillMaxWidth()
                 .focusRequester(focusRequester)
                 .onFocusChanged { state ->
-                    if(state.isFocused){
+                    if (state.isFocused) {
                         coroutineScope.launch { bringIntoViewRequester.bringIntoView() }
                     }
                 }
