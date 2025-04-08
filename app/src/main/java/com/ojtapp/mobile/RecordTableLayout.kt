@@ -1,5 +1,6 @@
 package com.ojtapp.mobile
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -25,17 +26,18 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun RecordTableLayout(
     records: List<Record>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRecordClick: () -> Unit = { }
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(Dimensions.basicSpacing)
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item { Spacer(modifier = Modifier.height(Dimensions.basicSpacing) )}
         if (records.isEmpty()) item { Text("No records found.") }
         item {  RecordHeader(records) }
         itemsIndexed(records, key = { index, _ ->  index }){ _, record ->
-            SwipeableRecord(false) { RarRecord(record) }
+            RarRecord(record, onClick = onRecordClick)
         }
     }
 }
@@ -45,18 +47,18 @@ fun RecordHeader(
     records: List<Record>,
     modifier: Modifier = Modifier
 ) {
-    when(records.firstOrNull()){
-        is GiaRecord -> Row {
-            giaFieldNames?.forEachIndexed { index, column ->
+    Row(
+        modifier = modifier.height(40.dp)
+    ) {
+        when(records.firstOrNull()){
+            is GiaRecord -> giaFieldNames?.forEachIndexed { index, column ->
                 if (column != null)
                     RarCell(
                         column, index = index,
                         color = MaterialTheme.colorScheme.outline
                     )
             }
-        }
-        is SetupRecord -> Row {
-            setupFieldNames?.forEachIndexed { index, column ->
+            is SetupRecord -> setupFieldNames?.forEachIndexed { index, column ->
                 if(column != null)
                     RarCell(
                         column, index = index,
@@ -70,10 +72,11 @@ fun RecordHeader(
 @Composable
 fun RarRecord(
     record: Record,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
 ) {
     Row(
-        modifier = Modifier.height(32.dp)
+        modifier = modifier.height(40.dp).clickable(onClick = onClick)
     ) {
         when (record) {
             is GiaRecord -> giaFieldNames?.forEachIndexed { index, value ->

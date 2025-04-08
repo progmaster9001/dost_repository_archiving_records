@@ -2,6 +2,7 @@ package com.ojtapp.mobile
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -136,9 +137,7 @@ private fun MainScreen(
                 )
             }
         }
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
+        Column(modifier = Modifier.padding(innerPadding)
         ) {
             AppHeader(user = user, toggleDialog = toggleDialog)
             TypeTabRow(selectedTabIndex = currentTab.ordinal, onSelectedTab = onSelectedTab)
@@ -162,7 +161,10 @@ fun AppHeader(modifier: Modifier = Modifier, user: User, toggleDialog: (DialogEv
             .padding(horizontal = Dimensions.horizontalPadding),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(painter = painterResource(R.drawable.dost_seal), contentDescription = "dost_logo")
+        Image(
+            painter = painterResource(R.drawable.dost_seal),
+            contentDescription = "dost_logo",
+        )
         Spacer(modifier = Modifier.width(Dimensions.basicSpacing))
         Text(
             text = stringResource(R.string.welcome_user, user.name),
@@ -216,191 +218,6 @@ fun TopToolbar(
         Spacer(Modifier.width(Dimensions.basicSpacing))
         LayoutSwitch(isTableLayout = isTableLayout, setLayout = setLayout)
     }
-}
-
-@Composable
-fun FilteredTextContent(
-    modifier: Modifier = Modifier,
-    currentTab: Type,
-    giaFilterState: GiaRecordFilterCriteria,
-    setupFilterState: SetupRecordFilterCriteria
-) {
-    Surface(
-        contentColor = MaterialTheme.colorScheme.outline,
-        modifier = modifier
-    ) {
-        CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.labelSmall) {
-            Column(
-                modifier = Modifier.padding(Dimensions.containerPadding)
-            ){
-                when(currentTab){
-                    Type.GIA -> {
-                        if(
-                            giaFilterState.location != null ||
-                            giaFilterState.classNameContains != null ||
-                            giaFilterState.beneficiaryContains != null ||
-                            giaFilterState.remarksContains != null ||
-                            giaFilterState.minProjectCost != null ||
-                            giaFilterState.maxProjectCost != null ||
-                            giaFilterState.projectDurationRange != null
-                        )
-                        {
-                            giaFilterState.location?.let {
-                                SingleFilterText(
-                                    name = "Location",
-                                    text = it
-                                )
-                            }
-                            giaFilterState.remarksContains?.let {
-                                SingleFilterText(
-                                    name = "Remarks",
-                                    text = it
-                                )
-                            }
-                            giaFilterState.classNameContains?.let {
-                                SingleFilterText(
-                                    name = "Class",
-                                    text = it
-                                )
-                            }
-                            giaFilterState.beneficiaryContains?.let {
-                                SingleFilterText(
-                                    name = "Beneficiary",
-                                    text = it
-                                )
-                            }
-                            giaFilterState.minProjectCost?.let {
-                                SingleFilterText(
-                                    name = "Min Project Cost",
-                                    text = it.toString()
-                                )
-                            }
-                            giaFilterState.maxProjectCost?.let {
-                                SingleFilterText(
-                                    name = "Max Project Cost",
-                                    text = it.toString()
-                                )
-                            }
-                            giaFilterState.projectDurationRange?.let {
-                                SingleFilterText(
-                                    name = "Project Duration Range",
-                                    text = it.toString()
-                                )
-                            }
-                        }else{
-                            Text("No filter applied.")
-                        }
-                    }
-                    Type.SETUP -> {
-                        if(
-                            setupFilterState.statusIn != null ||
-                            setupFilterState.sectorNameIn != null ||
-                            setupFilterState.sectorName != null ||
-                            setupFilterState.firmNameContains != null ||
-                            setupFilterState.proponentContains != null ||
-                            setupFilterState.minYearApproved != null ||
-                            setupFilterState.maxYearApproved != null ||
-                            setupFilterState.minAmountApproved != null ||
-                            setupFilterState.maxAmountApproved != null
-                        )
-                        {
-                            setupFilterState.sectorNameIn?.let {
-                                MultiFilterText(
-                                    name = "Selected Sectors",
-                                    values = it
-                                )
-                            }
-                            setupFilterState.statusIn?.let {
-                                MultiFilterText(
-                                    name = "Selected Statuses",
-                                    values = it
-                                )
-                            }
-                            setupFilterState.proponentContains?.let {
-                                SingleFilterText(
-                                    name = "Proponent",
-                                    text = it
-                                )
-                            }
-                            setupFilterState.firmNameContains?.let {
-                                SingleFilterText(
-                                    name = "Firm Name",
-                                    text = it
-                                )
-                            }
-                            setupFilterState.minYearApproved?.let {
-                                SingleFilterText(
-                                    name = "Min Year Approved",
-                                    text = it.toString()
-                                )
-                            }
-                            setupFilterState.maxYearApproved?.let {
-                                SingleFilterText(
-                                    name = "Max Year Approved",
-                                    text = it.toString()
-                                )
-                            }
-                            setupFilterState.minAmountApproved?.let {
-                                SingleFilterText(
-                                    name = "Min Amount Approved",
-                                    text = it.toString()
-                                )
-                            }
-                            setupFilterState.maxAmountApproved?.let {
-                                SingleFilterText(
-                                    name = "Max Amount Approved",
-                                    text = it.toString()
-                                )
-                            }
-                        }else{
-                            Text("No filter applied.")
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun MultiFilterText(
-    modifier: Modifier = Modifier,
-    name: String,
-    values: List<String>
-) {
-    Row {
-        Text(
-            text = buildAnnotatedString {
-                withStyle(style = SpanStyle(
-                    fontWeight = FontWeight.Black
-                )){
-                    append("$name: ")
-                }
-            },
-        )
-        FlowRow {
-            values.forEachIndexed { index, value -> Text(if(values.size == (index + 1)) value else "$value, ") }
-        }
-    }
-}
-
-@Composable
-fun SingleFilterText(
-    modifier: Modifier = Modifier,
-    name: String,
-    text: String
-) {
-    Text(
-        text = buildAnnotatedString {
-            withStyle(style = SpanStyle(
-                fontWeight = FontWeight.Black
-            )){
-                append("$name: ")
-            }
-            append(text)
-        },
-    )
 }
 
 @Composable
