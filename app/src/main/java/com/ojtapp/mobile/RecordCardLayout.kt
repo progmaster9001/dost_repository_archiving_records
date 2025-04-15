@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun RecordCardLayout(
@@ -24,7 +25,6 @@ fun RecordCardLayout(
         modifier = modifier.padding(horizontal = Dimensions.horizontalPadding),
         verticalArrangement = Arrangement.spacedBy(Dimensions.basicSpacing)
     ) {
-        item { Spacer(modifier = Modifier.height(Dimensions.basicSpacing) )}
         if(records.isEmpty()){
             item { Text(modifier = Modifier.fillMaxWidth(), text = "No records found", textAlign = TextAlign.Center) }
         }else{

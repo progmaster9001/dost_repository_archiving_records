@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 
 @Composable
@@ -29,9 +30,7 @@ fun FilteredTextContent(
         modifier = modifier
     ) {
         CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.labelSmall) {
-            Column(
-                modifier = Modifier.padding(Dimensions.containerPadding)
-            ){
+            Column{
                 when(currentTab){
                     Type.GIA -> {
                         if(
@@ -161,28 +160,25 @@ fun FilteredTextContent(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MultiFilterText(
     modifier: Modifier = Modifier,
     name: String,
     values: List<String>
 ) {
-    Row {
-        Text(
-            text = buildAnnotatedString {
-                withStyle(style = SpanStyle(
-                    fontWeight = FontWeight.Black
-                )
-                ){
-                    append("$name: ")
-                }
-            },
-        )
-        FlowRow {
-            values.forEachIndexed { index, value -> Text(if(values.size == (index + 1)) value else "$value, ") }
-        }
-    }
+    Text(
+        text = buildAnnotatedString {
+            withStyle(style = SpanStyle(
+                fontWeight = FontWeight.Black
+            )
+            ){
+                append("$name: ")
+            }
+            values.forEachIndexed { index, value -> append(if(values.size == (index + 1)) value else "$value, ") }
+        },
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis
+    )
 }
 
 @Composable

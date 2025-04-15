@@ -33,7 +33,6 @@ fun RecordTableLayout(
         modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        item { Spacer(modifier = Modifier.height(Dimensions.basicSpacing) )}
         if (records.isEmpty()) item { Text("No records found.") }
         item {  RecordHeader(records) }
         itemsIndexed(records, key = { index, _ ->  index }){ _, record ->
@@ -47,23 +46,16 @@ fun RecordHeader(
     records: List<Record>,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier.height(40.dp)
-    ) {
-        when(records.firstOrNull()){
-            is GiaRecord -> giaFieldNames?.forEachIndexed { index, column ->
-                if (column != null)
-                    RarCell(
-                        column, index = index,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-            }
-            is SetupRecord -> setupFieldNames?.forEachIndexed { index, column ->
-                if(column != null)
-                    RarCell(
-                        column, index = index,
-                        color = MaterialTheme.colorScheme.outline
-                    )
+    val fieldNames = records.firstOrNull()?.let { getFieldNames(it) }
+
+    Row(modifier = modifier.height(40.dp)) {
+        fieldNames?.forEachIndexed { index, column ->
+            if (column != null) {
+                RarCell(
+                    value = column,
+                    index = index,
+                    color = MaterialTheme.colorScheme.outline
+                )
             }
         }
     }
@@ -75,23 +67,18 @@ fun RarRecord(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val fieldValues = getFieldValues(record)
+
     Row(
         modifier = modifier.height(40.dp).clickable(onClick = onClick)
     ) {
-        when (record) {
-            is GiaRecord -> giaFieldNames?.forEachIndexed { index, value ->
-                if(value != null)
-                    RarCell(
-                        getFieldValue(record, value),
-                        index = index,
-                        fontWeight = if(index == 1) FontWeight.SemiBold else LocalTextStyle.current.fontWeight)
-            }
-            is SetupRecord -> setupFieldNames?.forEachIndexed { index, value ->
-                if(value != null)
-                    RarCell(
-                        getFieldValue(record, value),
-                        index = index,
-                        fontWeight = if(index == 1) FontWeight.SemiBold else LocalTextStyle.current.fontWeight)
+        fieldValues?.forEachIndexed { index, value ->
+            if (value != null) {
+                RarCell(
+                    value = value,
+                    index = index,
+                    fontWeight = if (index == 1) FontWeight.SemiBold else LocalTextStyle.current.fontWeight
+                )
             }
         }
     }
@@ -124,3 +111,11 @@ fun RarCell(
         }
     }
 }
+
+fun getFieldNames(record: Record): List<String?>? = when (record) {
+    is GiaRecord -> giaFieldNames
+    is SetupRecord -> setupFieldNames
+    else -> null
+}
+
+fun getFieldValues(record: Record): List<String?>? = getFieldNames(record)?.map { it?.let { name -> getFieldValue(record, name) } }
