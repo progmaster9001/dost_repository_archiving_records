@@ -167,3 +167,30 @@ fun filterRecords(
         }
     }
 }
+
+fun countFilters(type: Type, giaCriteria: GiaRecordFilterCriteria, setupCriteria: SetupRecordFilterCriteria): Int {
+    return when (type) {
+        Type.GIA -> listOfNotNull(
+            giaCriteria.location,
+            giaCriteria.minProjectCost,
+            giaCriteria.maxProjectCost,
+            giaCriteria.classNameContains,
+            giaCriteria.beneficiaryContains,
+            giaCriteria.projectDurationRange,
+            giaCriteria.remarksContains
+        ).size
+
+        Type.SETUP -> listOfNotNull(
+            setupCriteria.sectorName.takeIf { it?.isNotEmpty() ?: false },
+            setupCriteria.sectorNameIn?.takeIf { it.isNotEmpty() },
+            setupCriteria.minYearApproved,
+            setupCriteria.maxYearApproved,
+            setupCriteria.minAmountApproved,
+            setupCriteria.maxAmountApproved,
+            setupCriteria.status.takeIf { it?.isNotEmpty() ?: false },
+            setupCriteria.statusIn?.takeIf { it.isNotEmpty() },
+            setupCriteria.proponentContains,
+            setupCriteria.firmNameContains
+        ).size
+    }
+}

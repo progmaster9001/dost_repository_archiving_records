@@ -67,7 +67,6 @@ private fun LoginScreen(
         RarButton {
             login(state.email, state.password)
         }
-        if(errorMessage != null)
-            Text(errorMessage)
+        if(errorMessage != null) Text(errorMessage)
     }
 }

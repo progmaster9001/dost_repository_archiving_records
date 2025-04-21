@@ -200,6 +200,7 @@ fun GiaFilterContent(
                         )
                     )
                 },
+                enabled = atLeastOneNotEmpty(location, classNameContains, beneficiaryContains, remarksContains, minProjectCost, maxProjectCost),
                 colors = ButtonDefaults.buttonColors().copy(containerColor = Color(133, 224, 224, 255)),
                 shape = RoundedCornerShape(20f),
                 modifier = Modifier.weight(1f)
@@ -343,6 +344,7 @@ fun SetupFilterContent(
             }
             Spacer(modifier = Modifier.width(8.dp))
             Button(
+                enabled = atLeastOneNotEmpty(selectedSectors, selectedStatuses, proponentContains, firmNameContains, minYearApproved, maxYearApproved, minAmountApproved, maxAmountApproved),
                 onClick = {
                     applyFilter(
                         SetupRecordFilterCriteria(
@@ -399,6 +401,16 @@ fun MultiSelectChipRow(
                     label = { Text(option) }
                 )
             }
+        }
+    }
+}
+
+fun atLeastOneNotEmpty(vararg values: Any?): Boolean {
+    return values.any { value ->
+        when (value) {
+            is String -> value.isNotBlank()
+            is List<*> -> value.any { (it as? String)?.isNotBlank() == true }
+            else -> false
         }
     }
 }

@@ -1,15 +1,29 @@
 package com.ojtapp.mobile
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -24,49 +38,90 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun TypeTabRow(
+    filterAmount: Int,
     selectedTabIndex: Int,
     modifier: Modifier = Modifier,
+    onFilterSelect: () -> Unit,
     onSelectedTab: (Type) -> Unit
 ) {
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        contentAlignment = Alignment.Center
+            .clip(RoundedCornerShape(70f))
+            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp))
+            .padding(2.dp)
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .clip(RoundedCornerShape(40f))
-                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp))
+                .align(Alignment.Center)
+                .clip(RoundedCornerShape(70f))
+                .background(Color.Transparent),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp) // ADD THIS para centered
         ) {
-            TabRow(
-                selectedTabIndex = selectedTabIndex,
-                modifier = Modifier
-                    .width(LocalConfiguration.current.screenWidthDp.dp * .7f)
-                    .padding(2.dp)
-                    .clip(RoundedCornerShape(40f)),
-                containerColor = Color.Transparent,
-                indicator = { },
-                divider = { }
+            Type.entries.forEachIndexed { index, type ->
+                TypeTab(
+                    type = type,
+                    modifier = Modifier
+                        .then(
+                            if (index == 0) Modifier.clip(
+                                RoundedCornerShape(
+                                    topStart = 70f,
+                                    bottomStart = 70f
+                                )
+                            ) else Modifier
+                        ),
+                    selected = selectedTabIndex == index,
+                    onSelectedTab = {
+                        onSelectedTab(type)
+                    }
+                )
+            }
+
+            Box(
+                modifier = modifier
+                    .height(38.dp)
+                    .width(50.dp)
+                    .background(TabRowDefaults.primaryContainerColor)
+                    .clickable { /* optional click if needed */ },
+                contentAlignment = Alignment.Center
             ) {
-                Type.entries.forEachIndexed { index, type ->
-                    TypeTab(
-                        type = type,
-                        selected = selectedTabIndex == index,
-                        onSelectedTab = {
-                            onSelectedTab(type)
-                        }
+                Image(
+                    painter = painterResource(R.drawable.folder),
+                    contentDescription = "file_folder",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .height(38.dp)
+                    .width(50.dp)
+                    .clip(RoundedCornerShape(topEnd = 70f, bottomEnd = 70f))
+                    .background(TabRowDefaults.primaryContainerColor)
+                    .clickable { onFilterSelect() },
+                contentAlignment = Alignment.Center
+            ) {
+                BadgedBox(
+                    badge = {
+                        if(filterAmount > 0) Badge(content = { Text("$filterAmount") })
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "filter_menu",
                     )
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun TypeTab(
@@ -75,26 +130,26 @@ fun TypeTab(
     modifier: Modifier = Modifier,
     onSelectedTab: () -> Unit
 ) {
-
     val targetScale = if (selected) 1.2f else 1f
-    val animatedScale by animateFloatAsState(
-        targetValue = targetScale,
-    )
+    val animatedScale by animateFloatAsState(targetValue = targetScale)
 
-    Tab(
-        selected = selected,
-        onClick = onSelectedTab,
-        modifier = modifier.height(45.dp).padding(2.dp).clip(RoundedCornerShape(40f)).background(TabRowDefaults.primaryContainerColor),
-        selectedContentColor = Color(133, 224, 224, 255),
-        unselectedContentColor = MaterialTheme.colorScheme.outline,
-        text = {
-            Text(
-                text = type.name,
-                modifier = Modifier
-                    .scale(animatedScale),
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.labelLarge
+    Box(
+        modifier = modifier
+            .sizeIn(
+                minHeight = 38.dp,
+                minWidth = 90.dp
             )
-        }
-    )
+            .background(if (selected) Color(133, 224, 224, 255) else TabRowDefaults.primaryContainerColor)
+            .clickable(onClick = onSelectedTab)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = type.name,
+            modifier = Modifier.scale(animatedScale),
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.labelLarge,
+            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+        )
+    }
 }
