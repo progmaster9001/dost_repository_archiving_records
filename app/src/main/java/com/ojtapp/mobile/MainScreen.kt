@@ -24,11 +24,13 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -41,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -116,21 +119,24 @@ private fun MainScreen(
                 onSelectedTab = onSelectedTab
             )
         },
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
         floatingActionButtonPosition = FabPosition.Center
     ){ innerPadding ->
         if(showBottomSheet){
             FilterSheet(
                 sheetState = sheetState,
-                onDismissRequest = { showBottomSheet = false }
+                onDismissRequest = {
+                    showBottomSheet = false
+                }
             ) {
-                FilterContent(currentTab, giaFilterState, setupFilterState,
-                    { event ->
+                FilterContent(
+                    currentTab = currentTab,
+                    giaFilterState = giaFilterState,
+                    setupFilterState = setupFilterState,
+                    onDismissRequest = { showBottomSheet = false },
+                    filterEvent = { event ->
                         filterEvent(event)
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            if(!sheetState.isVisible){
-                                showBottomSheet = false
-                            }
-                        }
+                        showBottomSheet = false
                     }
                 )
             }
@@ -138,13 +144,13 @@ private fun MainScreen(
         Column(modifier = Modifier.padding(innerPadding)
         ) {
             AppHeader(user = user, toggleDialog = toggleDialog)
-            TopToolbar(
-                currentTab = currentTab,
-                isTableLayout = currentLayout == Layout.TABLE,
-                giaFilterState = giaFilterState,
-                setupFilterState = setupFilterState,
-                setLayout = setLayout
-            )
+//            TopToolbar(
+//                currentTab = currentTab,
+//                isTableLayout = currentLayout == Layout.TABLE,
+//                giaFilterState = giaFilterState,
+//                setupFilterState = setupFilterState,
+//                setLayout = setLayout
+//            )
             RecordsContainer(currentLayout = currentLayout, recordsState = recordsState,)
         }
     }
@@ -152,29 +158,32 @@ private fun MainScreen(
 
 @Composable
 fun AppHeader(modifier: Modifier = Modifier, user: User, toggleDialog: (DialogEvent) -> Unit) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = Dimensions.horizontalPadding),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Image(
-            painter = painterResource(R.drawable.dost_seal),
-            contentDescription = "dost_logo",
-            modifier = Modifier.size(32.dp)
-        )
-        Spacer(modifier = Modifier.width(Dimensions.basicSpacing))
-        Text(
-            text = stringResource(R.string.welcome_user, user.name),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-        )
-        IconButton(
-            onClick = { toggleDialog(DialogEvent.OpenDialog) }
+    Column {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimensions.horizontalPadding),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(imageVector = Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "logout_icon")
+            Image(
+                painter = painterResource(R.drawable.dost_seal),
+                contentDescription = "dost_logo",
+                modifier = Modifier.size(32.dp)
+            )
+            Spacer(modifier = Modifier.width(Dimensions.basicSpacing))
+            Text(
+                text = stringResource(R.string.welcome_user, user.name),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            IconButton(
+                onClick = { toggleDialog(DialogEvent.OpenDialog) }
+            ) {
+                Icon(imageVector = Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "logout_icon")
+            }
         }
+        HorizontalDivider()
     }
 }
 
@@ -227,13 +236,15 @@ fun RecordLayout(
     records: List<Record>,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-    ) {
-        AnimatedContent(targetState = currentLayout) { layout ->
-            when(layout){
-                Layout.CARD -> RecordCardLayout(records)
-                Layout.TABLE -> RecordTableLayout(records)
+    Surface{
+        Column(
+            modifier = modifier
+        ) {
+            AnimatedContent(targetState = currentLayout) { layout ->
+                when(layout){
+                    Layout.CARD -> RecordCardLayout(records)
+                    Layout.TABLE -> RecordTableLayout(records)
+                }
             }
         }
     }

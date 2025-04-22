@@ -3,6 +3,7 @@ package com.ojtapp.mobile
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -48,7 +49,10 @@ fun RecordHeader(
 ) {
     val fieldNames = records.firstOrNull()?.let { getFieldNames(it) }
 
-    Row(modifier = modifier.height(40.dp)) {
+    Row(
+        modifier = Modifier
+            .height(40.dp)
+    ){
         fieldNames?.forEachIndexed { index, column ->
             if (column != null) {
                 RarCell(
@@ -68,10 +72,11 @@ fun RarRecord(
     onClick: () -> Unit
 ) {
     val fieldValues = getFieldValues(record)
-
     Row(
-        modifier = modifier.height(40.dp).clickable(onClick = onClick)
-    ) {
+        modifier = Modifier
+            .height(40.dp)
+            .clickable(onClick = onClick)
+    ){
         fieldValues?.forEachIndexed { index, value ->
             if (value != null) {
                 RarCell(
@@ -94,8 +99,9 @@ fun RarCell(
     index: Int,
     size: Int = if(index == 0) 70 else 200,
 ) {
-    Surface(
-        modifier = modifier.fillMaxHeight().width(size.dp)
+    Box(
+        modifier = modifier.fillMaxHeight().width(size.dp),
+        contentAlignment = Alignment.CenterStart
     ) {
         Row (
             verticalAlignment = Alignment.CenterVertically

@@ -22,9 +22,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
@@ -50,19 +54,18 @@ fun TypeTabRow(
     onFilterSelect: () -> Unit,
     onSelectedTab: (Type) -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(70f))
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp))
-            .padding(2.dp)
+    Surface(
+        modifier = Modifier,
+        shape = RoundedCornerShape(70f),
+        color = MaterialTheme.colorScheme.inverseSurface,
+        shadowElevation = 4.dp
     ) {
         Row(
             modifier = Modifier
-                .align(Alignment.Center)
                 .clip(RoundedCornerShape(70f))
                 .background(Color.Transparent),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(2.dp) // ADD THIS para centered
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Type.entries.forEachIndexed { index, type ->
                 TypeTab(
@@ -87,7 +90,6 @@ fun TypeTabRow(
                 modifier = modifier
                     .height(38.dp)
                     .width(50.dp)
-                    .background(TabRowDefaults.primaryContainerColor)
                     .clickable { /* optional click if needed */ },
                 contentAlignment = Alignment.Center
             ) {
@@ -103,7 +105,6 @@ fun TypeTabRow(
                     .height(38.dp)
                     .width(50.dp)
                     .clip(RoundedCornerShape(topEnd = 70f, bottomEnd = 70f))
-                    .background(TabRowDefaults.primaryContainerColor)
                     .clickable { onFilterSelect() },
                 contentAlignment = Alignment.Center
             ) {
@@ -139,7 +140,7 @@ fun TypeTab(
                 minHeight = 38.dp,
                 minWidth = 90.dp
             )
-            .background(if (selected) Color(133, 224, 224, 255) else TabRowDefaults.primaryContainerColor)
+            .background(if (selected) Color(133, 224, 224, 255) else MaterialTheme.colorScheme.inverseSurface)
             .clickable(onClick = onSelectedTab)
             .padding(horizontal = 12.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center
@@ -149,7 +150,7 @@ fun TypeTab(
             modifier = Modifier.scale(animatedScale),
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.labelLarge,
-            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+            color = if (selected) Color(23, 95, 108, 255) else LocalContentColor.current
         )
     }
 }

@@ -194,3 +194,26 @@ fun countFilters(type: Type, giaCriteria: GiaRecordFilterCriteria, setupCriteria
         ).size
     }
 }
+
+fun GiaRecordFilterCriteria.isEmpty(): Boolean {
+    return location == null &&
+            minProjectCost == null &&
+            maxProjectCost == null &&
+            classNameContains == null &&
+            beneficiaryContains == null &&
+            projectDurationRange == null &&
+            remarksContains == null
+}
+
+fun SetupRecordFilterCriteria.isEmpty(): Boolean {
+    return sectorName.isNullOrEmpty() &&
+            (sectorNameIn.isNullOrEmpty()) &&
+            minYearApproved == null &&
+            maxYearApproved == null &&
+            minAmountApproved == null &&
+            maxAmountApproved == null &&
+            status.isNullOrEmpty() &&
+            (statusIn.isNullOrEmpty()) &&
+            proponentContains == null &&
+            firmNameContains == null
+}

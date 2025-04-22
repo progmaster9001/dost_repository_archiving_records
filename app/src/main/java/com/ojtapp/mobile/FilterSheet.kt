@@ -1,6 +1,7 @@
 package com.ojtapp.mobile
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,28 +20,34 @@ import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -51,13 +58,14 @@ fun FilterSheet(
     modifier: Modifier = Modifier,
     sheetState: SheetState,
     onDismissRequest: () -> Unit,
-    content: @Composable ()(ColumnScope.() -> Unit)
+    content: @Composable()(ColumnScope.() -> Unit)
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         modifier = Modifier.systemBarsPadding(),
         scrimColor = BottomSheetDefaults.ScrimColor.copy(alpha = .2f),
         sheetState = sheetState,
+        shape = RectangleShape,
         dragHandle = null,
         content = content
     )
@@ -68,17 +76,19 @@ fun FilterContent(
     currentTab: Type,
     giaFilterState: GiaRecordFilterCriteria,
     setupFilterState: SetupRecordFilterCriteria,
+    onDismissRequest: () -> Unit,
     filterEvent: (FilterEvent) -> Unit
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = Dimensions.verticalPadding)
-            .imePadding()
+            .padding(Dimensions.containerPadding)
+            .imePadding(),
+        contentAlignment = Alignment.TopEnd
     ) {
         when(currentTab){
-            Type.GIA -> GiaFilterContent(giaFilterState, { filterEvent(FilterEvent.ResetFilter) }, { filterEvent(FilterEvent.ApplyFilter(it))} )
-            Type.SETUP -> SetupFilterContent(setupFilterState,  { filterEvent(FilterEvent.ResetFilter) }, { filterEvent(FilterEvent.ApplyFilter(it))} )
+            Type.GIA -> GiaFilterContent(giaFilterState, onDismissRequest, { filterEvent(FilterEvent.ResetFilter) }, { filterEvent(FilterEvent.ApplyFilter(it))} )
+            Type.SETUP -> SetupFilterContent(setupFilterState, onDismissRequest, { filterEvent(FilterEvent.ResetFilter) },{ filterEvent(FilterEvent.ApplyFilter(it))} )
         }
     }
 }
@@ -87,6 +97,7 @@ fun FilterContent(
 @Composable
 fun GiaFilterContent(
     giaFilterState: GiaRecordFilterCriteria,
+    onDismissRequest: () -> Unit,
     resetFilter: () -> Unit,
     applyFilter: (FilterCriteria) -> Unit,
     modifier: Modifier = Modifier
@@ -106,10 +117,14 @@ fun GiaFilterContent(
 
     Column(
         modifier = modifier
-            .padding(horizontal = Dimensions.horizontalPadding)
             .verticalScroll(scrollState)
     ) {
-        Text("GIA Filter Criteria", style = MaterialTheme.typography.titleLarge)
+        Row(
+            verticalAlignment = Alignment.Top
+        ) {
+            Text("GIA Filter", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+            Icon(imageVector = Icons.Default.Close, contentDescription = "close_bottom_sheet", modifier.clickable(onClick = onDismissRequest))
+        }
 
         OutlinedTextField(
             value = location,
@@ -171,7 +186,7 @@ fun GiaFilterContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         Row {
-            TextButton(
+            IconButton(
                 onClick = {
                     resetFilter()
                     location = ""
@@ -180,11 +195,12 @@ fun GiaFilterContent(
                     remarksContains = ""
                     minProjectCost = ""
                     maxProjectCost = ""
-                },
-                colors = ButtonDefaults.textButtonColors().copy(contentColor = MaterialTheme.colorScheme.error),
-                modifier = Modifier.weight(1f)
+                }
             ) {
-                Text("Reset", fontWeight = FontWeight.Bold)
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "reset_icon"
+                )
             }
             Spacer(modifier = Modifier.width(8.dp))
             Button(
@@ -200,7 +216,7 @@ fun GiaFilterContent(
                         )
                     )
                 },
-                enabled = atLeastOneNotEmpty(location, classNameContains, beneficiaryContains, remarksContains, minProjectCost, maxProjectCost),
+                enabled = atLeastOneNotEmpty(location, classNameContains, beneficiaryContains, remarksContains, minProjectCost, maxProjectCost) || !giaFilterState.isEmpty(),
                 colors = ButtonDefaults.buttonColors().copy(containerColor = Color(133, 224, 224, 255)),
                 shape = RoundedCornerShape(20f),
                 modifier = Modifier.weight(1f)
@@ -215,6 +231,7 @@ fun GiaFilterContent(
 @Composable
 fun SetupFilterContent(
     setupFilterState: SetupRecordFilterCriteria,
+    onDismissRequest: () -> Unit,
     resetFilter: () -> Unit,
     applyFilter: (FilterCriteria) -> Unit,
     modifier: Modifier = Modifier
@@ -239,13 +256,14 @@ fun SetupFilterContent(
 
     Column(
         modifier = modifier
-            .padding(horizontal = Dimensions.horizontalPadding)
             .verticalScroll(scrollState)
     ) {
-        Text(
-            "SETUP Filter Criteria",
-            style = MaterialTheme.typography.titleLarge
-        )
+        Row(
+            verticalAlignment = Alignment.Top
+        ) {
+            Text("SETUP Filter", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+            Icon(imageVector = Icons.Default.Close, contentDescription = "close_bottom_sheet", modifier.clickable(onClick = onDismissRequest))
+        }
 
         MultiSelectChipRow(
             title = "Select Multiple Sectors",
@@ -325,7 +343,7 @@ fun SetupFilterContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         Row {
-            TextButton(
+            IconButton(
                 onClick = {
                     resetFilter()
                     selectedSectors = emptyList()
@@ -336,15 +354,25 @@ fun SetupFilterContent(
                     maxYearApproved = ""
                     minAmountApproved = ""
                     maxAmountApproved = ""
-                },
-                colors = ButtonDefaults.textButtonColors().copy(contentColor = MaterialTheme.colorScheme.error),
-                modifier = Modifier.weight(1f)
+                }
             ) {
-                Text("Reset", fontWeight = FontWeight.Bold)
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "reset_icon"
+                )
             }
             Spacer(modifier = Modifier.width(8.dp))
             Button(
-                enabled = atLeastOneNotEmpty(selectedSectors, selectedStatuses, proponentContains, firmNameContains, minYearApproved, maxYearApproved, minAmountApproved, maxAmountApproved),
+                enabled = atLeastOneNotEmpty(
+                    selectedSectors,
+                    selectedStatuses,
+                    proponentContains,
+                    firmNameContains,
+                    minYearApproved,
+                    maxYearApproved,
+                    minAmountApproved,
+                    maxAmountApproved
+                ) || !setupFilterState.isEmpty(),
                 onClick = {
                     applyFilter(
                         SetupRecordFilterCriteria(
