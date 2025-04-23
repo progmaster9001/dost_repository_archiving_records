@@ -34,7 +34,10 @@ fun RecordTableLayout(
         modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (records.isEmpty()) item { Text("No records found.") }
+        if (records.isEmpty()){
+            item { Spacer(Modifier.height(16.dp)) }
+            item { Text("No records found.") }
+        }
         item {  RecordHeader(records) }
         itemsIndexed(records, key = { index, _ ->  index }){ _, record ->
             RarRecord(record, onClick = onRecordClick)
