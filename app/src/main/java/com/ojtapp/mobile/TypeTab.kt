@@ -52,7 +52,8 @@ fun TypeTabRow(
     selectedTabIndex: Int,
     modifier: Modifier = Modifier,
     onFilterSelect: () -> Unit,
-    onSelectedTab: (Type) -> Unit
+    onSelectedTab: (Type) -> Unit,
+    onFileClick: () -> Unit
 ) {
     Surface(
         modifier = Modifier,
@@ -90,7 +91,7 @@ fun TypeTabRow(
                 modifier = modifier
                     .height(38.dp)
                     .width(50.dp)
-                    .clickable { /* optional click if needed */ },
+                    .clickable(onClick = onFileClick),
                 contentAlignment = Alignment.Center
             ) {
                 Image(

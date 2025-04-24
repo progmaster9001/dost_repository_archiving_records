@@ -3,8 +3,12 @@ package com.ojtapp.mobile
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import kotlinx.serialization.Serializable
 
+@Serializable
+object HomeGraph
 
 @Composable
 fun RarNavigationHost(modifier: Modifier = Modifier) {
@@ -14,6 +18,14 @@ fun RarNavigationHost(modifier: Modifier = Modifier) {
         startDestination = Login
     ){
         loginScreen(onLogin = navController::navigateToHomeScreen)
-        homeScreen(onLogout = navController::navigateToLogin)
+        navigation<HomeGraph>(
+            startDestination = Home
+        ){
+            homeScreen(
+                onLogout = navController::navigateToLogin,
+                onFileClick = navController::navigateToFilePickerScreen
+            )
+            filePickerScreen()
+        }
     }
 }

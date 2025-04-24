@@ -27,7 +27,6 @@ fun RecordCardLayout(
     ) {
         item { Spacer(Modifier.height(8.dp)) }
         if (records.isEmpty()){
-            item { Spacer(Modifier.height(8.dp)) }
             item { Text("No records found.") }
         } else{
             items(records){ record ->

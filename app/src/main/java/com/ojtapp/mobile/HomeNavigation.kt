@@ -11,21 +11,22 @@ import kotlinx.serialization.Serializable
 object Home
 
 fun NavController.navigateToHomeScreen(){
-    navigate(Home){
+    navigate(HomeGraph){
         popUpTo<Login>{
             inclusive = true
         }
     }
 }
 
-fun NavGraphBuilder.homeScreen(onLogout: () -> Unit){
+fun NavGraphBuilder.homeScreen(onLogout: () -> Unit, onFileClick: () -> Unit){
     composable<Home> {
         val viewModel: MainViewModel = viewModel(factory = GenericViewModelFactory {
             MainViewModel(ServiceLocator.getUserRepository(), ServiceLocator.provideRecordsRepository(LocalRecordsRepository()))
         })
         MainRoute(
             viewModel = viewModel,
-            logout = onLogout
+            logout = onLogout,
+            onFileClick = onFileClick
         )
     }
 }

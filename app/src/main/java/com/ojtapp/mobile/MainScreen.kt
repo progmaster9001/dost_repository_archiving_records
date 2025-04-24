@@ -7,27 +7,22 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
@@ -37,15 +32,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,7 +63,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun MainRoute(
     viewModel: MainViewModel,
-    logout: () -> Unit
+    logout: () -> Unit,
+    onFileClick: () -> Unit
 ) {
 
     val user by viewModel.user.collectAsStateWithLifecycle()
@@ -101,7 +94,8 @@ fun MainRoute(
         recordsState = recordsState,
         toggleDialog = viewModel::toggleDialog,
         onSelectedTab = viewModel::setCurrentTab,
-        setLayout = viewModel::setCurrentLayout
+        setLayout = viewModel::setCurrentLayout,
+        onFileClick = onFileClick
     )
 }
 
@@ -118,6 +112,7 @@ private fun MainScreen(
     recordsState: RecordState,
     toggleDialog: (DialogEvent) -> Unit,
     setLayout: () -> Unit,
+    onFileClick: () -> Unit,
     onSelectedTab: (Type) -> Unit
 ) {
 
@@ -131,11 +126,10 @@ private fun MainScreen(
             AppHeader(
                 user = user,
                 currentTab = currentTab,
-                currentLayout = currentLayout,
                 giaFilterState = giaFilterState,
                 setupFilterState = setupFilterState,
+                resetFilter = { filterEvent(FilterEvent.ResetFilter) },
                 toggleDialog = toggleDialog,
-                setLayout = setLayout
             )
         },
         floatingActionButton = {
@@ -143,10 +137,11 @@ private fun MainScreen(
                 filterAmount = countFilters(currentTab, giaFilterState, setupFilterState),
                 selectedTabIndex = currentTab.ordinal,
                 onFilterSelect = { showBottomSheet = true },
-                onSelectedTab = onSelectedTab
+                onSelectedTab = onSelectedTab,
+                onFileClick = onFileClick
             )
         },
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+        containerColor = MaterialTheme.colorScheme.surfaceBright,
         floatingActionButtonPosition = FabPosition.Center
     ){ innerPadding ->
         if(showBottomSheet){
@@ -168,7 +163,7 @@ private fun MainScreen(
                 )
             }
         }
-        Box(modifier = Modifier.padding(innerPadding)) { RecordsContainer(currentLayout = currentLayout, recordsState = recordsState) }
+        Box(modifier = Modifier.padding(innerPadding)){ RecordsContainer(currentLayout = currentLayout, recordsState = recordsState) }
     }
 }
 
@@ -176,11 +171,10 @@ private fun MainScreen(
 fun AppHeader(
     modifier: Modifier = Modifier,
     user: User,
-    currentLayout: Layout,
     currentTab: Type,
     giaFilterState: GiaRecordFilterCriteria,
     setupFilterState: SetupRecordFilterCriteria,
-    setLayout: () -> Unit,
+    resetFilter: () -> Unit,
     toggleDialog: (DialogEvent) -> Unit) {
     Box(
         modifier = Modifier
@@ -188,16 +182,18 @@ fun AppHeader(
                 elevation = 4.dp,
                 shape = RectangleShape
             )
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+            .background(MaterialTheme.colorScheme.surfaceBright)
     ){
         Column(
-            modifier = Modifier.then(
-                if(LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT){
-                    Modifier.statusBarsPadding()
-                }else{
-                    Modifier.safeDrawingPadding()
-                }
-            ).animateContentSize()
+            modifier = Modifier
+                .then(
+                    if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                        Modifier.statusBarsPadding()
+                    } else {
+                        Modifier.safeDrawingPadding()
+                    }
+                )
+                .animateContentSize()
         ) {
             Row(
                 modifier = modifier
@@ -227,12 +223,12 @@ fun AppHeader(
                     color = MaterialTheme.colorScheme.error
                 )
             }
-            TopToolbar(
+            Spacer(modifier = Modifier.height(16.dp))
+            FilteredTextContent(
                 currentTab = currentTab,
                 giaFilterState = giaFilterState,
                 setupFilterState = setupFilterState,
-                isTableLayout = currentLayout == Layout.TABLE,
-                setLayout = setLayout
+                resetFilter = resetFilter
             )
         }
     }
@@ -244,7 +240,7 @@ fun RecordsContainer(
     recordsState: RecordState,
     modifier: Modifier = Modifier
 ) {
-    Surface(modifier = modifier) {
+    Surface(modifier = modifier, color = MaterialTheme.colorScheme.surfaceContainerLow) {
         AnimatedContent(
             modifier = modifier.fillMaxSize(),
             targetState = recordsState
@@ -255,30 +251,6 @@ fun RecordsContainer(
                 is RecordState.Success -> RecordLayout(currentLayout, state.records)
             }
         }
-    }
-}
-
-@Composable
-fun TopToolbar(
-    currentTab: Type,
-    modifier: Modifier = Modifier,
-    giaFilterState: GiaRecordFilterCriteria,
-    setupFilterState: SetupRecordFilterCriteria,
-    isTableLayout: Boolean,
-    setLayout: () -> Unit
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp, horizontal = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        FilteredTextContent(
-            currentTab = currentTab,
-            giaFilterState = giaFilterState,
-            setupFilterState = setupFilterState
-        )
-        LayoutSwitch(isTableLayout = isTableLayout, setLayout = setLayout)
     }
 }
 

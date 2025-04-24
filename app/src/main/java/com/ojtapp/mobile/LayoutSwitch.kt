@@ -1,129 +1,112 @@
 package com.ojtapp.mobile
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDp
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.surfaceColorAtElevation
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
+import androidx.compose.ui.unit.sp
+import kotlin.math.roundToInt
 
 @Composable
 fun LayoutSwitch(
     modifier: Modifier = Modifier,
+    firstText: String = "Table",
+    secondText: String = "Card",
     isTableLayout: Boolean,
-    setLayout: () -> Unit,
-    iconSize: Dp = 24.dp // Default size
+    setLayout: () -> Unit
 ) {
-    val activeColor = Color(0xFF9C27B0)
-    val inactiveColor = Color.White
+    val scaleFactor = 0.8f
 
-    val buttonSize = iconSize * 1.5f
-    val spacing = 8.dp
+    val totalWidth = (130.dp * scaleFactor)
+    val height = (40.dp * scaleFactor)
+    val itemWidth = totalWidth / 2
+    val cornerRadius = RoundedCornerShape(100f * scaleFactor) // 👀 still thicc just smaller
+    val textSize = 14.sp * scaleFactor // or adjust to taste
 
-    val offsetX: Dp by animateDpAsState(
-        targetValue = if (isTableLayout) 0.dp else buttonSize + spacing,
-        label = "SlideOffset"
+    val itemWidthPx = with(LocalDensity.current) { itemWidth.toPx() }
+
+    val animatedOffsetX by animateFloatAsState(
+        targetValue = if (isTableLayout) 0f else itemWidthPx,
+        animationSpec = tween(durationMillis = 300),
+        label = "SwitchOffsetAnim"
     )
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(50))
-            .background(activeColor)
-            .padding(4.dp)
-            .height(buttonSize)
-            .width(buttonSize * 2 + spacing)
-            .clickable { setLayout() } // clickable sa tanan!
+            .width(totalWidth)
+            .height(height)
+            .clip(cornerRadius)
+            .background(MaterialTheme.colorScheme.inverseSurface)
+            .clickable(
+                indication = null,
+                interactionSource = null,
+                onClick = setLayout
+            )
     ) {
-        // BACKGROUND Color (stay at the back)
+        // Sliding background
         Box(
             modifier = Modifier
-                .matchParentSize()
-                .clip(RoundedCornerShape(50))
-                .background(activeColor)
-                .zIndex(0f)
+                .offset { IntOffset(animatedOffsetX.roundToInt(), 0) }
+                .width(itemWidth)
+                .fillMaxHeight()
+                .clip(cornerRadius)
+                .background(MaterialTheme.colorScheme.inverseOnSurface)
         )
 
-        // SLIDING background -- SMALLER and CENTERED
-        Box(
-            modifier = Modifier
-                .offset(x = offsetX)
-                .size(buttonSize) // instead of fillMaxHeight() + width()
-                .clip(RoundedCornerShape(50))
-                .background(inactiveColor)
-                .align(Alignment.CenterStart) // ALIGN VERTICALLY CENTERED 🔥
-                .zIndex(1f)
-        )
-
-        // ICONS
         Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = spacing / 2)
-                .zIndex(2f),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.fillMaxSize(),
         ) {
-            LayoutSwitchItem(
-                icon = R.drawable.table_list__1_,
-                isSelected = isTableLayout,
-                activeColor = activeColor,
-                inactiveColor = inactiveColor,
-                iconSize = iconSize
-            )
-            LayoutSwitchItem(
-                icon = R.drawable.cards_blank__1_,
-                isSelected = !isTableLayout,
-                activeColor = activeColor,
-                inactiveColor = inactiveColor,
-                iconSize = iconSize
-            )
-        }
-    }
-}
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = firstText,
+                    fontSize = textSize,
+                    textAlign = TextAlign.Center,
+                    color = if (isTableLayout) MaterialTheme.colorScheme.inverseSurface else MaterialTheme.colorScheme.inverseOnSurface,
+                )
+            }
 
-@Composable
-private fun LayoutSwitchItem(
-    icon: Int,
-    isSelected: Boolean,
-    activeColor: Color,
-    inactiveColor: Color,
-    iconSize: Dp
-) {
-    Box(
-        modifier = Modifier
-            .size(iconSize * 1.8f),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            tint = if (isSelected) activeColor else inactiveColor,
-            modifier = Modifier.size(iconSize)
-        )
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = secondText,
+                    fontSize = textSize,
+                    textAlign = TextAlign.Center,
+                    color = if (!isTableLayout) MaterialTheme.colorScheme.inverseSurface else MaterialTheme.colorScheme.inverseOnSurface,
+                )
+            }
+        }
     }
 }
