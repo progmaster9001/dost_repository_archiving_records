@@ -34,11 +34,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -93,11 +95,14 @@ fun MainRoute(
         filterEvent = viewModel::filterEvent,
         recordsState = recordsState,
         toggleDialog = viewModel::toggleDialog,
-        onSelectedTab = viewModel::setCurrentTab,
         setLayout = viewModel::setCurrentLayout,
-        onFileClick = onFileClick
+        recordNavigationEvent = viewModel::recordNavEvent,
+        onFileClick = onFileClick,
+        onSelectedTab = viewModel::setCurrentTab,
     )
 }
+
+val LocalRecordTab = staticCompositionLocalOf { Type.GIA }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,6 +117,7 @@ private fun MainScreen(
     recordsState: RecordState,
     toggleDialog: (DialogEvent) -> Unit,
     setLayout: () -> Unit,
+    recordNavigationEvent: (RecordNavigationEvent) -> Unit,
     onFileClick: () -> Unit,
     onSelectedTab: (Type) -> Unit
 ) {
@@ -163,7 +169,30 @@ private fun MainScreen(
                 )
             }
         }
-        Box(modifier = Modifier.padding(innerPadding)){ RecordsContainer(currentLayout = currentLayout, recordsState = recordsState) }
+        Box(modifier = Modifier.padding(innerPadding)){
+            Surface(
+                modifier = modifier,
+                color = MaterialTheme.colorScheme.surfaceContainerLow
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Spacer(Modifier.height(4.dp))
+                    LayoutSwitch(
+                        firstText = "Table",
+                        secondText = "Card",
+                        isTableLayout = currentLayout == Layout.TABLE,
+                        setLayout = setLayout,
+                        modifier = Modifier.padding(horizontal = 4.dp).align(Alignment.End)
+                    )
+                    CompositionLocalProvider(
+                        LocalRecordTab provides currentTab
+                    ) {
+                        RecordsContainer(currentLayout = currentLayout, recordsState = recordsState)
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -240,16 +269,14 @@ fun RecordsContainer(
     recordsState: RecordState,
     modifier: Modifier = Modifier
 ) {
-    Surface(modifier = modifier, color = MaterialTheme.colorScheme.surfaceContainerLow) {
-        AnimatedContent(
-            modifier = modifier.fillMaxSize(),
-            targetState = recordsState
-        ) { state ->
-            when (state) {
-                is RecordState.Error -> Text(text = state.error)
-                RecordState.Loading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                is RecordState.Success -> RecordLayout(currentLayout, state.records)
-            }
+    AnimatedContent(
+        modifier = modifier.fillMaxSize(),
+        targetState = recordsState
+    ) { state ->
+        when (state) {
+            is RecordState.Error -> Text(text = state.error)
+            RecordState.Loading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            is RecordState.Success -> RecordLayout(currentLayout, state.records)
         }
     }
 }

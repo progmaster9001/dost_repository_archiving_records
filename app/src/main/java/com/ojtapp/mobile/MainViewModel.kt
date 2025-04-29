@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
@@ -105,6 +106,14 @@ class MainViewModel(
         when(event){
             DialogEvent.CloseDialog -> _dialogState.update { DialogState.CLOSED }
             DialogEvent.OpenDialog -> _dialogState.update { DialogState.OPENED }
+        }
+    }
+
+    fun recordNavEvent(event: RecordNavigationEvent){
+        when(event){
+            RecordNavigationEvent.Back -> TODO()
+            is RecordNavigationEvent.Jump -> TODO()
+            RecordNavigationEvent.Next -> TODO()
         }
     }
 

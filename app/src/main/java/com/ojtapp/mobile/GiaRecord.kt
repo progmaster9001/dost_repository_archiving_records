@@ -8,9 +8,12 @@ data class GiaRecord(
     val beneficiary: String,
     val location: String,
     val projectDuration: String,
-    val projectCost: String,
-    val remarks: String,
-    val className: String
-): Record
+    val projectCost: Double,
+    val remarks: String?,
+    val qrc: String?,
+    val classId: Int,
+    val createdAt: String,
+    val className: String = ""
+) : Record
 
 val giaFieldNames = GiaRecord::class.primaryConstructor?.parameters?.map { it.name }

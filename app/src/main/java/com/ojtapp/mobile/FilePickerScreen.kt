@@ -30,7 +30,7 @@ fun FilePickerScreen(
             FileItem(
                 icon = if(it.files != null) R.drawable.file else R.drawable.folder_open,
                 fileName = it.name
-            ) { }
+            ){}
         }
     }
 }

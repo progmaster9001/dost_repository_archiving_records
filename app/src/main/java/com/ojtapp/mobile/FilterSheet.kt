@@ -102,7 +102,6 @@ fun GiaFilterContent(
     applyFilter: (FilterCriteria) -> Unit,
     modifier: Modifier = Modifier
 ) {
-
     var location by remember { mutableStateOf(giaFilterState.location ?: "") }
     var classNameContains by remember { mutableStateOf(giaFilterState.classNameContains ?: "") }
     var beneficiaryContains by remember { mutableStateOf(giaFilterState.beneficiaryContains ?: "") }
@@ -115,22 +114,45 @@ fun GiaFilterContent(
     val coroutineScope = rememberCoroutineScope()
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
 
+    val isSame = giaFilterState.isSame(
+        location, classNameContains, beneficiaryContains, remarksContains, minProjectCost, maxProjectCost
+    )
+    val areFieldsNotEmpty = atLeastOneNotEmpty(
+        location, classNameContains, beneficiaryContains, remarksContains, minProjectCost, maxProjectCost
+    )
+    val activateReset = areFieldsNotEmpty && isSame
+
+    val buttonColors = if (activateReset) {
+        ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer,
+            contentColor = MaterialTheme.colorScheme.onErrorContainer
+        )
+    } else {
+        ButtonDefaults.buttonColors(
+            containerColor = Color(133, 224, 224, 255)
+        )
+    }
+
+    val buttonText = if (activateReset) "Reset" else "Apply"
+
     Column(
-        modifier = modifier
-            .verticalScroll(scrollState)
+        modifier = modifier.verticalScroll(scrollState)
     ) {
-        Row(
-            verticalAlignment = Alignment.Top
-        ) {
+        Row(verticalAlignment = Alignment.Top) {
             Text("GIA Filter", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
-            Icon(imageVector = Icons.Default.Close, contentDescription = "close_bottom_sheet", modifier.clickable(onClick = onDismissRequest))
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "close_bottom_sheet",
+                modifier = Modifier.clickable(onClick = onDismissRequest)
+            )
         }
 
+        // --- Input fields ---
         OutlinedTextField(
             value = location,
             onValueChange = { location = it },
+            label = { Text("Location") },
             singleLine = true,
-            label = { Text("Location", maxLines = 1) },
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(focusRequester)
@@ -144,7 +166,7 @@ fun GiaFilterContent(
         OutlinedTextField(
             value = classNameContains,
             onValueChange = { classNameContains = it },
-            label = { Text("Class Name Contains", maxLines = 1) },
+            label = { Text("Class Name Contains") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -152,7 +174,7 @@ fun GiaFilterContent(
         OutlinedTextField(
             value = beneficiaryContains,
             onValueChange = { beneficiaryContains = it },
-            label = { Text("Beneficiary Contains", maxLines = 1) },
+            label = { Text("Beneficiary Contains") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -160,7 +182,7 @@ fun GiaFilterContent(
         OutlinedTextField(
             value = remarksContains,
             onValueChange = { remarksContains = it },
-            label = { Text("Remarks Contains", maxLines = 1) },
+            label = { Text("Remarks Contains") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -169,7 +191,7 @@ fun GiaFilterContent(
             OutlinedTextField(
                 value = minProjectCost,
                 onValueChange = { minProjectCost = it },
-                label = { Text("Min Project Cost", maxLines = 1) },
+                label = { Text("Min Project Cost") },
                 singleLine = true,
                 modifier = Modifier.weight(1f)
             )
@@ -177,7 +199,7 @@ fun GiaFilterContent(
             OutlinedTextField(
                 value = maxProjectCost,
                 onValueChange = { maxProjectCost = it },
-                label = { Text("Max Project Cost", maxLines = 1) },
+                label = { Text("Max Project Cost") },
                 singleLine = true,
                 modifier = Modifier.weight(1f)
             )
@@ -185,44 +207,35 @@ fun GiaFilterContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row {
-            IconButton(
-                onClick = {
-                    resetFilter()
+        Button(
+            onClick = {
+                if (activateReset) {
                     location = ""
                     classNameContains = ""
                     beneficiaryContains = ""
                     remarksContains = ""
                     minProjectCost = ""
                     maxProjectCost = ""
-                }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "reset_icon"
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Button(
-                onClick = {
+                    resetFilter()  // Call reset
+                } else {
                     applyFilter(
                         GiaRecordFilterCriteria(
-                            location = location.ifBlank { null },
-                            classNameContains = classNameContains.ifBlank { null },
+                            locationContains = location.ifBlank { null },
+                            classId = classNameContains.ifBlank { null },
                             beneficiaryContains = beneficiaryContains.ifBlank { null },
                             remarksContains = remarksContains.ifBlank { null },
-                            minProjectCost = minProjectCost.toIntOrNull(),
-                            maxProjectCost = maxProjectCost.toIntOrNull()
+                            minProjectCost = minProjectCost.toDoubleOrNull(),
+                            maxProjectCost = maxProjectCost.toDoubleOrNull()
                         )
                     )
-                },
-                enabled = atLeastOneNotEmpty(location, classNameContains, beneficiaryContains, remarksContains, minProjectCost, maxProjectCost) || !giaFilterState.isEmpty(),
-                colors = ButtonDefaults.buttonColors().copy(containerColor = Color(133, 224, 224, 255)),
-                shape = RoundedCornerShape(20f),
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Apply", fontWeight = FontWeight.Bold)
-            }
+                }
+            },
+            colors = buttonColors,
+            enabled = areFieldsNotEmpty || !isSame,
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(buttonText, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -249,6 +262,19 @@ fun SetupFilterContent(
     var minAmountApproved by remember { mutableStateOf(setupFilterState.minAmountApproved?.toString() ?: "") }
     var maxAmountApproved by remember { mutableStateOf(setupFilterState.maxAmountApproved?.toString() ?: "") }
 
+    val areFieldsNotEmpty = atLeastOneNotEmpty(selectedSectors, selectedStatuses, proponentContains, firmNameContains, minYearApproved, maxYearApproved, minAmountApproved, maxAmountApproved)
+    val isSame = setupFilterState.isSame(selectedSectors, selectedStatuses, proponentContains, firmNameContains, minYearApproved, maxYearApproved, minAmountApproved, maxAmountApproved)
+    val activateReset = areFieldsNotEmpty && isSame
+
+    val buttonColors = when(activateReset){
+        true -> ButtonDefaults.buttonColors().copy(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer)
+        false -> ButtonDefaults.buttonColors().copy(containerColor = Color(133, 224, 224, 255))
+    }
+    val text = when(activateReset){
+        true -> "Reset"
+        false -> "Apply"
+    }
+
     val scrollState = rememberScrollState()
     val focusRequester = remember { FocusRequester() }
     val coroutineScope = rememberCoroutineScope()
@@ -256,7 +282,7 @@ fun SetupFilterContent(
 
     Column(
         modifier = modifier
-            .verticalScroll(scrollState)
+            .verticalScroll(scrollState),
     ) {
         Row(
             verticalAlignment = Alignment.Top
@@ -339,13 +365,10 @@ fun SetupFilterContent(
                     .weight(1f)
             )
         }
-
         Spacer(modifier = Modifier.height(16.dp))
-
-        Row {
-            IconButton(
-                onClick = {
-                    resetFilter()
+        Button(
+            onClick = {
+                if(activateReset){
                     selectedSectors = emptyList()
                     selectedStatuses = emptyList()
                     proponentContains = ""
@@ -354,26 +377,7 @@ fun SetupFilterContent(
                     maxYearApproved = ""
                     minAmountApproved = ""
                     maxAmountApproved = ""
-                }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "reset_icon"
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Button(
-                enabled = atLeastOneNotEmpty(
-                    selectedSectors,
-                    selectedStatuses,
-                    proponentContains,
-                    firmNameContains,
-                    minYearApproved,
-                    maxYearApproved,
-                    minAmountApproved,
-                    maxAmountApproved
-                ) || !setupFilterState.isEmpty(),
-                onClick = {
+                }else{
                     applyFilter(
                         SetupRecordFilterCriteria(
                             sectorNameIn = selectedSectors.ifEmpty { null },
@@ -386,13 +390,14 @@ fun SetupFilterContent(
                             maxAmountApproved = maxAmountApproved.toIntOrNull()
                         )
                     )
-                },
-                colors = ButtonDefaults.buttonColors().copy(containerColor = Color(133, 224, 224, 255)),
-                shape = RoundedCornerShape(20f),
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Apply", fontWeight = FontWeight.Bold)
-            }
+                }
+            },
+            colors = buttonColors,
+            enabled = areFieldsNotEmpty || !isSame,
+            shape = RoundedCornerShape(20f),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(text, fontWeight = FontWeight.Bold)
         }
     }
 }
