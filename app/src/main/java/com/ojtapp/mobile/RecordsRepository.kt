@@ -4,9 +4,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
 interface RecordsRepository {
-    val setupRecords: Flow<List<SetupRecord>>
-    val giaRecords: Flow<List<GiaRecord>>
+    val giaRecordsFlow: Flow<List<GiaRecord>>
+    val setupRecordsFlow: Flow<List<SetupRecord>>
 
     fun getRecords(type: Type): Flow<Resource<List<Record>>>
-    suspend fun updateRecord(type: Type)
+    fun getGiaRecords(): Flow<Resource<List<Record>>>
+    fun getSetupRecords(): Flow<Resource<List<Record>>>
 }

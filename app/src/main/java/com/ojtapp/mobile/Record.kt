@@ -45,6 +45,12 @@ enum class GiaClass(val value: String) {
     }
 }
 
+enum class Status(val value: String){
+    ONGOING("Ongoing"),
+    COMPLETED("Completed"),
+    TERMINATED("Terminated")
+}
+
 enum class Type{
     GIA,
     SETUP

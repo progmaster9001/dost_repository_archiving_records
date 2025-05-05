@@ -7,6 +7,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -177,14 +178,27 @@ private fun MainScreen(
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Spacer(Modifier.height(4.dp))
-                    LayoutSwitch(
-                        firstText = "Table",
-                        secondText = "Card",
-                        isTableLayout = currentLayout == Layout.TABLE,
-                        setLayout = setLayout,
-                        modifier = Modifier.padding(horizontal = 4.dp).align(Alignment.End)
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        val records = when(recordsState){
+                            is RecordState.Error -> emptyList()
+                            RecordState.Loading -> emptyList()
+                            is RecordState.Success -> recordsState.records
+                        }
+                        Text(
+                            "Records Found: ${records.size}",
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                        LayoutSwitch(
+                            firstText = "Table",
+                            secondText = "Card",
+                            isTableLayout = currentLayout == Layout.TABLE,
+                            setLayout = setLayout,
+                        )
+                    }
                     CompositionLocalProvider(
                         LocalRecordTab provides currentTab
                     ) {
@@ -271,7 +285,7 @@ fun RecordsContainer(
 ) {
     AnimatedContent(
         modifier = modifier.fillMaxSize(),
-        targetState = recordsState
+        targetState = recordsState,
     ) { state ->
         when (state) {
             is RecordState.Error -> Text(text = state.error)

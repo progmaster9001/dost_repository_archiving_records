@@ -64,15 +64,22 @@ fun FilteredTextContent(
                         when(currentTab){
                             Type.GIA -> {
                                 if(
-                                    giaFilterState.location != null ||
-                                    giaFilterState.classNameContains != null ||
+                                    giaFilterState.projectTitleContains != null ||
+                                    giaFilterState.locationContains != null ||
+                                    giaFilterState.classContains != null ||
                                     giaFilterState.beneficiaryContains != null ||
                                     giaFilterState.remarksContains != null ||
                                     giaFilterState.minProjectCost != null ||
                                     giaFilterState.maxProjectCost != null ||
-                                    giaFilterState.projectDurationRange != null
+                                    giaFilterState.classesIn != null
                                 ) {
-                                    giaFilterState.location?.let {
+                                    giaFilterState.projectTitleContains?.let {
+                                        SingleFilterText(
+                                            name = "Project Title",
+                                            text = it
+                                        )
+                                    }
+                                    giaFilterState.locationContains?.let {
                                         SingleFilterText(
                                             name = "Location",
                                             text = it
@@ -84,7 +91,7 @@ fun FilteredTextContent(
                                             text = it
                                         )
                                     }
-                                    giaFilterState.classNameContains?.let {
+                                    giaFilterState.classContains?.let {
                                         SingleFilterText(
                                             name = "Class",
                                             text = it
@@ -108,10 +115,10 @@ fun FilteredTextContent(
                                             text = it.toString()
                                         )
                                     }
-                                    giaFilterState.projectDurationRange?.let {
-                                        SingleFilterText(
-                                            name = "Project Duration Range",
-                                            text = it.toString()
+                                    giaFilterState.classesIn?.let {
+                                        MultiFilterText(
+                                            name = "Selected Classes",
+                                            values = it
                                         )
                                     }
                                 }
@@ -119,8 +126,8 @@ fun FilteredTextContent(
                             Type.SETUP -> {
                                 if(
                                     setupFilterState.statusIn != null ||
-                                    setupFilterState.sectorNameIn != null ||
-                                    setupFilterState.sectorName != null ||
+                                    setupFilterState.sectorIn != null ||
+                                    setupFilterState.sectorContains != null ||
                                     setupFilterState.firmNameContains != null ||
                                     setupFilterState.proponentContains != null ||
                                     setupFilterState.minYearApproved != null ||
@@ -129,7 +136,7 @@ fun FilteredTextContent(
                                     setupFilterState.maxAmountApproved != null
                                 )
                                 {
-                                    setupFilterState.sectorNameIn?.let {
+                                    setupFilterState.sectorIn?.let {
                                         MultiFilterText(
                                             name = "Selected Sectors",
                                             values = it

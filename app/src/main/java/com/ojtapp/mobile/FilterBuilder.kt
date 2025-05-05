@@ -8,96 +8,98 @@ class FilterBuilder<T : Record> {
         return this
     }
 
-    fun <R : Comparable<R>> withRange(
-        selector: (T) -> R,
-        range: ClosedRange<R>
-    ): FilterBuilder<T> {
+    fun <R : Comparable<R>> withRange(selector: (T) -> R, range: ClosedRange<R>): FilterBuilder<T> {
         return with { item -> selector(item) in range }
     }
 
-    fun <R : Comparable<R>> withMin(
-        selector: (T) -> R,
-        min: R
-    ): FilterBuilder<T> {
+    fun <R : Comparable<R>> withMin(selector: (T) -> R, min: R): FilterBuilder<T> {
         return with { item -> selector(item) >= min }
     }
 
-    fun <R : Comparable<R>> withMax(
-        selector: (T) -> R,
-        max: R
-    ): FilterBuilder<T> {
+    fun <R : Comparable<R>> withMax(selector: (T) -> R, max: R): FilterBuilder<T> {
         return with { item -> selector(item) <= max }
     }
 
-    fun build(): (T) -> Boolean = { item ->
-        predicates.all { it(item) }
-    }
+    fun build(): (T) -> Boolean = { item -> predicates.all { it(item) } }
 }
 
 interface FilterCriteria
 
 data class SetupRecordFilterCriteria(
     val firmNameContains: String? = null,
-    val componentsContains: String? = null,
+    val proponentContains: String? = null,
     val minAmountApproved: Double? = null,
     val maxAmountApproved: Double? = null,
     val minYearApproved: Int? = null,
     val maxYearApproved: Int? = null,
     val locationContains: String? = null,
     val districtContains: String? = null,
-    val listOfEquipmentContains: String? = null
+    val statusContains: String? = null,
+    val statusIn: List<String>? = null,
+    val sectorContains: String? = null,
+    val sectorIn: List<String>? = null
 ) : FilterCriteria
 
 data class GiaRecordFilterCriteria(
+    val projectTitleContains: String? = null,
     val locationContains: String? = null,
     val beneficiaryContains: String? = null,
     val remarksContains: String? = null,
-    val projectDurationContains: String? = null,
     val minProjectCost: Double? = null,
     val maxProjectCost: Double? = null,
-    val classId: Int? = null,
-    val qrcContains: String? = null
+    val classContains: String? = null,
+    val classesIn: List<String>? = null
 ) : FilterCriteria
 
 fun buildSetupRecordFilter(criteria: SetupRecordFilterCriteria): (SetupRecord) -> Boolean {
     val builder = FilterBuilder<SetupRecord>()
 
-    criteria.firmNameContains?.let {
-        builder.with {
-            it.firmName.contains(it.firmName, ignoreCase = true)
-        }
+    criteria.firmNameContains?.let { text ->
+        builder.with { it.firmName.contains(text, ignoreCase = true) }
     }
 
-    criteria.componentsContains?.let {
-        builder.with { it.components?.contains(it.components, ignoreCase = true) ?: false }
+    criteria.proponentContains?.let { text ->
+        builder.with { it.proponent?.contains(text, ignoreCase = true) ?: false }
     }
 
-    criteria.locationContains?.let {
-        builder.with { it.location?.contains(it.location, ignoreCase = true) ?: false }
+    criteria.locationContains?.let { text ->
+        builder.with { it.location?.contains(text, ignoreCase = true) ?: false }
     }
 
-    criteria.districtContains?.let {
-        builder.with { it.district?.contains(it.district, ignoreCase = true) ?: false }
+    criteria.districtContains?.let { text ->
+        builder.with { it.district?.contains(text, ignoreCase = true) ?: false }
     }
 
-    criteria.listOfEquipmentContains?.let {
-        builder.with { it.listOfEquipment?.contains(it.listOfEquipment, ignoreCase = true) ?: false }
+    criteria.statusContains?.let { text ->
+        builder.with { it.status.contains(text, ignoreCase = true) }
     }
 
-    criteria.minAmountApproved?.let {
-        builder.withMin({ it.amountApproved ?: 0.0 }, it)
+    criteria.sectorContains?.let { text ->
+        builder.with { it.sector.contains(text, ignoreCase = true) }
     }
 
-    criteria.maxAmountApproved?.let {
-        builder.withMax({ it.amountApproved ?: 0.0 }, it)
+    criteria.statusIn?.let { values ->
+        builder.with { it.status in values }
     }
 
-    criteria.minYearApproved?.let { minYear ->
-        builder.withMin({ it.yearApproved ?: Int.MIN_VALUE }, minYear)
+    criteria.sectorIn?.let { values ->
+        builder.with { it.sector in values }
     }
 
-    criteria.maxYearApproved?.let { maxYear ->
-        builder.withMax({ it.yearApproved ?: Int.MAX_VALUE }, maxYear)
+    criteria.minAmountApproved?.let { min ->
+        builder.withMin({ it.amountApproved ?: 0.0 }, min)
+    }
+
+    criteria.maxAmountApproved?.let { max ->
+        builder.withMax({ it.amountApproved ?: 0.0 }, max)
+    }
+
+    criteria.minYearApproved?.let { min ->
+        builder.withMin({ it.yearApproved ?: Int.MIN_VALUE }, min)
+    }
+
+    criteria.maxYearApproved?.let { max ->
+        builder.withMax({ it.yearApproved ?: Int.MAX_VALUE }, max)
     }
 
     return builder.build()
@@ -106,36 +108,36 @@ fun buildSetupRecordFilter(criteria: SetupRecordFilterCriteria): (SetupRecord) -
 fun buildGiaRecordFilter(criteria: GiaRecordFilterCriteria): (GiaRecord) -> Boolean {
     val builder = FilterBuilder<GiaRecord>()
 
-    criteria.locationContains?.let {
-        builder.with { it.location.contains(it.location, ignoreCase = true) }
+    criteria.projectTitleContains?.let { text ->
+        builder.with { it.projectTitle.contains(text, ignoreCase = true) }
     }
 
-    criteria.beneficiaryContains?.let {
-        builder.with { it.beneficiary.contains(it.beneficiary, ignoreCase = true) }
+    criteria.beneficiaryContains?.let { text ->
+        builder.with { it.beneficiary.contains(text, ignoreCase = true) }
     }
 
-    criteria.remarksContains?.let {
-        builder.with { it.remarks?.contains(it.remarks, ignoreCase = true) ?: false }
+    criteria.locationContains?.let { text ->
+        builder.with { it.location.contains(text, ignoreCase = true) }
     }
 
-    criteria.projectDurationContains?.let {
-        builder.with { it.projectDuration.contains(it.projectDuration, ignoreCase = true) }
+    criteria.remarksContains?.let { text ->
+        builder.with { it.remarks?.contains(text, ignoreCase = true) ?: false }
     }
 
-    criteria.minProjectCost?.let {
-        builder.withMin({ it.projectCost }, it)
+    criteria.classContains?.let { text ->
+        builder.with { it.className.contains(text, ignoreCase = true) }
     }
 
-    criteria.maxProjectCost?.let {
-        builder.withMax({ it.projectCost }, it)
+    criteria.classesIn?.let { values ->
+        builder.with { it.className in values }
     }
 
-    criteria.classId?.let { id ->
-        builder.with { it.classId == id }
+    criteria.minProjectCost?.let { min ->
+        builder.withMin({ it.projectCost }, min)
     }
 
-    criteria.qrcContains?.let {
-        builder.with { it.qrc?.contains(it.qrc, ignoreCase = true) ?: false }
+    criteria.maxProjectCost?.let { max ->
+        builder.withMax({ it.projectCost }, max)
     }
 
     return builder.build()
@@ -167,52 +169,105 @@ fun filterRecords(
     }
 }
 
-fun countFilters(type: Type, giaCriteria: GiaRecordFilterCriteria, setupCriteria: SetupRecordFilterCriteria): Int {
+fun countFilters(
+    type: Type,
+    giaCriteria: GiaRecordFilterCriteria,
+    setupCriteria: SetupRecordFilterCriteria
+): Int {
     return when (type) {
         Type.GIA -> listOfNotNull(
+            giaCriteria.projectTitleContains,
             giaCriteria.locationContains,
             giaCriteria.beneficiaryContains,
             giaCriteria.remarksContains,
-            giaCriteria.projectDurationContains,
             giaCriteria.minProjectCost,
             giaCriteria.maxProjectCost,
-            giaCriteria.classId,
-            giaCriteria.qrcContains
+            giaCriteria.classContains,
+            giaCriteria.classesIn
         ).size
 
         Type.SETUP -> listOfNotNull(
             setupCriteria.firmNameContains,
-            setupCriteria.componentsContains,
+            setupCriteria.proponentContains,
             setupCriteria.minAmountApproved,
             setupCriteria.maxAmountApproved,
             setupCriteria.minYearApproved,
             setupCriteria.maxYearApproved,
             setupCriteria.locationContains,
             setupCriteria.districtContains,
-            setupCriteria.listOfEquipmentContains
+            setupCriteria.statusContains,
+            setupCriteria.sectorContains,
+            setupCriteria.sectorIn,
+            setupCriteria.statusIn
         ).size
     }
 }
 
+fun GiaRecordFilterCriteria.isSame(
+    projectTitle: String,
+    location: String,
+    classNameContains: String,
+    beneficiaryContains: String,
+    remarksContains: String,
+    minProjectCost: String,
+    maxProjectCost: String,
+    selectedClasses: List<String>
+): Boolean {
+    val minCostDouble = minProjectCost.toDoubleOrNull()
+    val maxCostDouble = maxProjectCost.toDoubleOrNull()
+
+    return (this.projectTitleContains ?: "").trim() == projectTitle.trim() &&
+            (this.locationContains ?: "").trim() == location.trim() &&
+            (this.classContains ?: "").trim() == classNameContains.trim() &&
+            (this.beneficiaryContains ?: "").trim() == beneficiaryContains.trim() &&
+            (this.remarksContains ?: "").trim() == remarksContains.trim() &&
+            (this.minProjectCost ?: 0.0) == (minCostDouble ?: 0.0) &&
+            (this.maxProjectCost ?: 0.0) == (maxCostDouble ?: 0.0) &&
+            this.classesIn.orEmpty() == selectedClasses
+}
+
+fun SetupRecordFilterCriteria.isSame(
+    selectedSectors: List<String>,
+    selectedStatuses: List<String>,
+    proponentContains: String,
+    firmNameContains: String,
+    minYearApprovedStr: String,
+    maxYearApprovedStr: String,
+    minAmountApprovedStr: String,
+    maxAmountApprovedStr: String
+): Boolean {
+    return (this.sectorIn.orEmpty() == selectedSectors) &&
+            (this.statusIn.orEmpty() == selectedStatuses) &&
+            this.proponentContains.orEmpty() == proponentContains &&
+            this.firmNameContains.orEmpty() == firmNameContains &&
+            (this.minYearApproved?.toString().orEmpty()) == minYearApprovedStr &&
+            (this.maxYearApproved?.toString().orEmpty()) == maxYearApprovedStr &&
+            (this.minAmountApproved?.toString().orEmpty()) == minAmountApprovedStr &&
+            (this.maxAmountApproved?.toString().orEmpty()) == maxAmountApprovedStr
+}
+
 fun GiaRecordFilterCriteria.isEmpty(): Boolean {
     return locationContains == null &&
+            projectTitleContains == null &&
             beneficiaryContains == null &&
             remarksContains == null &&
-            projectDurationContains == null &&
             minProjectCost == null &&
             maxProjectCost == null &&
-            classId == null &&
-            qrcContains == null
+            classContains == null &&
+            classesIn.isNullOrEmpty()
 }
 
 fun SetupRecordFilterCriteria.isEmpty(): Boolean {
     return firmNameContains == null &&
-            componentsContains == null &&
+            proponentContains == null &&
             minAmountApproved == null &&
             maxAmountApproved == null &&
             minYearApproved == null &&
             maxYearApproved == null &&
             locationContains == null &&
             districtContains == null &&
-            listOfEquipmentContains == null
+            statusContains == null &&
+            sectorContains == null &&
+            sectorIn.isNullOrEmpty() &&
+            statusIn.isNullOrEmpty()
 }

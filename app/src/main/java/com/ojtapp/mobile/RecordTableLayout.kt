@@ -30,7 +30,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -42,60 +44,52 @@ fun RecordTableLayout(
     modifier: Modifier = Modifier,
     onRecordClick: (Record) -> Unit = {}
 ) {
-    if (records.isEmpty()) {
-        Column(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(Modifier.height(16.dp))
-            Text("No records found.")
-        }
-        return
-    }
-
     LazyColumn(
         modifier = modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
-            .padding(8.dp),
+            .padding(horizontal = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
-                // Header Section
-                RecordHeader(records)
-                HorizontalDivider(
-                    thickness = 1.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+        if(records.isEmpty()){
+            item {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "No records found.",
+                    style = MaterialTheme.typography.bodyMedium,
                 )
             }
-        }
-
-        itemsIndexed(records) { index, record ->
-            Card(
-                shape = RoundedCornerShape(0.dp), // No rounding for list items
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-            ) {
-                Column(
+        }else{
+            item {
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                        .clickable { onRecordClick(record) }
+                        .clip(RoundedCornerShape(topStart = 50f, topEnd = 50f))
                 ) {
-                    RarRecord(record, onClick = { onRecordClick(record) })
+                    RecordHeader(records)
+                }
+            }
 
-                    if (index != records.lastIndex) {
-                        HorizontalDivider(
-                            thickness = 0.5.dp,
-                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-                        )
+            itemsIndexed(records) { index, record ->
+                Card(
+                    shape = RectangleShape, // No rounding for list items
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onRecordClick(record) }
+                    ) {
+                        RarRecord(record, onClick = { onRecordClick(record) })
+                        if (index != records.lastIndex) {
+                            HorizontalDivider(
+                                thickness = 0.5.dp,
+                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                            )
+                        }
                     }
                 }
             }
@@ -154,7 +148,7 @@ fun RarRecord(
                     value = value,
                     index = index,
                     fontWeight = if (index == 0) FontWeight.SemiBold else null,
-                    specialStyling = if(LocalRecordTab.current == Type.GIA) index == 6 else index == 5
+                    specialStyling = if(LocalRecordTab.current == Type.GIA) index == 6 else index == 8
                 )
             }
         }
@@ -200,23 +194,24 @@ fun RarCell(
 
 @Composable
 fun StatusPill(value: String) {
-    val backgroundColor = when (value.lowercase()) {
-        "open" -> Color(0xFFD1FAE5) // green-ish
-        "paid" -> Color(0xFFDBEAFE) // blue-ish
-        "inactive" -> Color(0xFFE0E0E0) // gray
-        else -> Color(0xFFE0E7FF) // fallback soft blue
+    val backgroundColor = when (value) {
+        "Ongoing" -> Color(0xFFD1FAE5) // green-ish
+        "Completed" -> Color(0xFFDBEAFE) // blue-ish
+        "Terminated" -> Color(0xFFE0E0E0) // gray
+        else -> Color.Transparent // fallback soft blue
     }
-    val textColor = when (value.lowercase()) {
-        "open" -> Color(0xFF065F46)
-        "paid" -> Color(0xFF1D4ED8)
-        "inactive" -> Color(0xFF6B7280)
-        else -> Color(0xFF4338CA)
+
+    val textColor = when (value) {
+        "Ongoing" -> Color(0xFF065F46)
+        "Completed" -> Color(0xFF1D4ED8)
+        "Terminated" -> Color(0xFF806B74)
+        else -> LocalTextStyle.current.color
     }
 
     Box(
         modifier = Modifier
             .background(backgroundColor, shape = RoundedCornerShape(50))
-            .padding(horizontal = 12.dp, vertical = 4.dp),
+            .padding(horizontal = 4.dp, vertical = 2.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(

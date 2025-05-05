@@ -70,15 +70,16 @@ class MainViewModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val records: StateFlow<RecordState> = _currentTab
         .flatMapLatest { tab ->
-            recordsRepository.getRecords(tab)
-                .map { resource ->
-                    when (resource) {
-                        is Resource.Error -> RecordState.Error(resource.message)
-                        Resource.Loading -> RecordState.Loading
-                        is Resource.Success -> RecordState.Success(resource.data)
-                    }
+            when(tab){
+                Type.GIA -> recordsRepository.getGiaRecords()
+                Type.SETUP -> recordsRepository.getSetupRecords()
+            }.map { resource ->
+                when (resource) {
+                    is Resource.Error -> RecordState.Error(resource.message)
+                    Resource.Loading -> RecordState.Loading
+                    is Resource.Success -> RecordState.Success(resource.data)
                 }
-                .catch { e -> emit(RecordState.Error(e.message ?: "Unknown Error")) }
+            }.catch { e -> emit(RecordState.Error(e.message ?: "Unknown Error")) }
         }
         .stateIn(
             scope = viewModelScope,

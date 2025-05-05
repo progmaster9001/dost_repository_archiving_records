@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -21,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -41,7 +43,7 @@ fun RecordCardLayout(
     LazyColumn(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp, horizontal = Dimensions.horizontalPadding),
+            .padding(horizontal = Dimensions.horizontalPadding),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item { Spacer(Modifier.height(4.dp)) }
@@ -49,9 +51,8 @@ fun RecordCardLayout(
         if (records.isEmpty()) {
             item {
                 Text(
-                    text = "No records found. 😭",
+                    text = "No records found.",
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(vertical = 32.dp)
                 )
             }
         } else {
@@ -103,20 +104,21 @@ private fun GiaRecordContent(record: GiaRecord) {
     FieldItem(label = "Location", value = record.location)
     FieldItem(label = "Duration", value = record.projectDuration)
     FieldItem(label = "Cost", value = record.projectCost.toString())
-    record.remarks?.let { FieldItem(label = "Remarks", value = it) }
+    FieldItem(label = "Remarks", value = record.remarks.orEmpty())
     FieldItem(label = "Class", value = record.className)
 }
 
 @Composable
 private fun SetupRecordContent(record: SetupRecord) {
-    FieldItem(label = "Id", value = record.id.toString())
-    FieldItem(label = "Firm Name", value = record.firmName)
-    FieldItem(label = "Proponent", value = record.components ?: "")
+    RecordHeader(title = record.firmName)
+    FieldItem(label = "Proponent", value = record.proponent ?: "")
     FieldItem(label = "District", value = record.district ?: "")
     FieldItem(label = "List of Equipment", value = record.listOfEquipment ?: "")
     FieldItem(label = "Amount Approved", value = record.amountApproved.toString())
     FieldItem(label = "Year Approved", value = record.yearApproved.toString())
-    FieldItem(label = "File Location", value = record.fileLocation)
+    FieldItem(label = "Location", value = record.location.orEmpty())
+    FieldItem(label = "Sector", value = record.sector)
+    FieldItem(label = "Proponent", value = record.status)
 }
 
 @Composable
@@ -125,15 +127,17 @@ private fun FieldItem(label: String, value: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 2.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = "$label:",
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium
         )
+        Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = value,
+            textAlign = TextAlign.Right,
+            modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.bodySmall
         )
     }

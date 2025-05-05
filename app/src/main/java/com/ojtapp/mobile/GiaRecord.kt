@@ -9,11 +9,12 @@ data class GiaRecord(
     val location: String,
     val projectDuration: String,
     val projectCost: Double,
-    val remarks: String?,
-    val qrc: String?,
-    val classId: Int,
-    val createdAt: String,
-    val className: String = ""
+    val remarks: String? = null,
+    val className: String = "",
+    val fileLocation: String
 ) : Record
 
-val giaFieldNames = GiaRecord::class.primaryConstructor?.parameters?.map { it.name }
+val giaFieldNames = GiaRecord::class.primaryConstructor
+    ?.parameters
+    ?.mapNotNull { it.name }
+    ?.filterNot { it.contains("fileLocation") }

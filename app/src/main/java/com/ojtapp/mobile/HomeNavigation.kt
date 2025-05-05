@@ -21,7 +21,7 @@ fun NavController.navigateToHomeScreen(){
 fun NavGraphBuilder.homeScreen(onLogout: () -> Unit, onFileClick: () -> Unit){
     composable<Home> {
         val viewModel: MainViewModel = viewModel(factory = GenericViewModelFactory {
-            MainViewModel(ServiceLocator.getUserRepository(), ServiceLocator.provideRecordsRepository(LocalRecordsRepository()))
+            MainViewModel(ServiceLocator.getUserRepository(), ServiceLocator.getRecordsRepository())
         })
         MainRoute(
             viewModel = viewModel,

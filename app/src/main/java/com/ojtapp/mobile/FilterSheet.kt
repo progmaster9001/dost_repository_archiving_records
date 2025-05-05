@@ -102,12 +102,14 @@ fun GiaFilterContent(
     applyFilter: (FilterCriteria) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var location by remember { mutableStateOf(giaFilterState.location ?: "") }
-    var classNameContains by remember { mutableStateOf(giaFilterState.classNameContains ?: "") }
+    var projectTitle by remember { mutableStateOf(giaFilterState.projectTitleContains ?: "") }
+    var location by remember { mutableStateOf(giaFilterState.locationContains ?: "") }
+    var classNameContains by remember { mutableStateOf(giaFilterState.classContains ?: "") }
     var beneficiaryContains by remember { mutableStateOf(giaFilterState.beneficiaryContains ?: "") }
     var remarksContains by remember { mutableStateOf(giaFilterState.remarksContains ?: "") }
     var minProjectCost by remember { mutableStateOf(giaFilterState.minProjectCost?.toString() ?: "") }
     var maxProjectCost by remember { mutableStateOf(giaFilterState.maxProjectCost?.toString() ?: "") }
+    var selectedClasses by remember { mutableStateOf(giaFilterState.classesIn ?: emptyList()) }
 
     val scrollState = rememberScrollState()
     val focusRequester = remember { FocusRequester() }
@@ -115,10 +117,10 @@ fun GiaFilterContent(
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
 
     val isSame = giaFilterState.isSame(
-        location, classNameContains, beneficiaryContains, remarksContains, minProjectCost, maxProjectCost
+        projectTitle, location, classNameContains, beneficiaryContains, remarksContains, minProjectCost, maxProjectCost, selectedClasses
     )
     val areFieldsNotEmpty = atLeastOneNotEmpty(
-        location, classNameContains, beneficiaryContains, remarksContains, minProjectCost, maxProjectCost
+        projectTitle, location, classNameContains, beneficiaryContains, remarksContains, minProjectCost, maxProjectCost, selectedClasses
     )
     val activateReset = areFieldsNotEmpty && isSame
 
@@ -147,11 +149,10 @@ fun GiaFilterContent(
             )
         }
 
-        // --- Input fields ---
         OutlinedTextField(
-            value = location,
-            onValueChange = { location = it },
-            label = { Text("Location") },
+            value = projectTitle,
+            onValueChange = { projectTitle = it },
+            label = { Text("Project Title") },
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
@@ -161,6 +162,16 @@ fun GiaFilterContent(
                         coroutineScope.launch { bringIntoViewRequester.bringIntoView() }
                     }
                 }
+        )
+
+        // --- Input fields ---
+        OutlinedTextField(
+            value = location,
+            onValueChange = { location = it },
+            label = { Text("Location") },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
         )
 
         OutlinedTextField(
@@ -205,27 +216,37 @@ fun GiaFilterContent(
             )
         }
 
+        MultiSelectChipRow(
+            title = "Select Multiple Classes",
+            options = GiaClass.entries.map { it.value },
+            selectedOptions = selectedClasses,
+            onSelectionChanged = { selectedClasses = it }
+        )
+
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = {
                 if (activateReset) {
+                    projectTitle = ""
                     location = ""
                     classNameContains = ""
                     beneficiaryContains = ""
                     remarksContains = ""
                     minProjectCost = ""
                     maxProjectCost = ""
-                    resetFilter()  // Call reset
+                    selectedClasses = emptyList()
                 } else {
                     applyFilter(
                         GiaRecordFilterCriteria(
+                            projectTitleContains = projectTitle.ifBlank { null },
                             locationContains = location.ifBlank { null },
-                            classId = classNameContains.ifBlank { null },
+                            classContains = classNameContains.ifBlank { null },
                             beneficiaryContains = beneficiaryContains.ifBlank { null },
                             remarksContains = remarksContains.ifBlank { null },
                             minProjectCost = minProjectCost.toDoubleOrNull(),
-                            maxProjectCost = maxProjectCost.toDoubleOrNull()
+                            maxProjectCost = maxProjectCost.toDoubleOrNull(),
+                            classesIn = selectedClasses.ifEmpty { null }
                         )
                     )
                 }
@@ -250,7 +271,7 @@ fun SetupFilterContent(
     modifier: Modifier = Modifier
 ) {
 
-    var selectedSectors by remember { mutableStateOf(setupFilterState.sectorNameIn ?: emptyList()) }
+    var selectedSectors by remember { mutableStateOf(setupFilterState.sectorIn ?: emptyList()) }
     var selectedStatuses by remember { mutableStateOf(setupFilterState.statusIn ?: emptyList()) }
 
     var proponentContains by remember { mutableStateOf(setupFilterState.proponentContains ?: "") }
@@ -293,7 +314,7 @@ fun SetupFilterContent(
 
         MultiSelectChipRow(
             title = "Select Multiple Sectors",
-            options = listOf("Agriculture", "Tech", "Health", "Finance"), // replace with your actual sectors
+            options = SectorType.entries.map { it.value },
             selectedOptions = selectedSectors,
             onSelectionChanged = { selectedSectors = it }
         )
@@ -301,7 +322,7 @@ fun SetupFilterContent(
 
         MultiSelectChipRow(
             title = "Select Multiple Statuses",
-            options = listOf("Approved", "Pending", "Rejected"), // replace with your actual statuses
+            options = Status.entries.map { it.value },
             selectedOptions = selectedStatuses,
             onSelectionChanged = { selectedStatuses = it }
         )
@@ -380,14 +401,14 @@ fun SetupFilterContent(
                 }else{
                     applyFilter(
                         SetupRecordFilterCriteria(
-                            sectorNameIn = selectedSectors.ifEmpty { null },
+                            sectorIn = selectedSectors.ifEmpty { null },
                             statusIn = selectedStatuses.ifEmpty { null },
                             proponentContains = proponentContains.ifBlank { null },
                             firmNameContains = firmNameContains.ifBlank { null },
                             minYearApproved = minYearApproved.toIntOrNull(),
                             maxYearApproved = maxYearApproved.toIntOrNull(),
-                            minAmountApproved = minAmountApproved.toIntOrNull(),
-                            maxAmountApproved = maxAmountApproved.toIntOrNull()
+                            minAmountApproved = minAmountApproved.toDoubleOrNull(),
+                            maxAmountApproved = maxAmountApproved.toDoubleOrNull()
                         )
                     )
                 }

@@ -13,6 +13,7 @@ class UserRepositoryImpl(
 
     override fun clearUser() {
         userPreference.clearUser()
+        _user.update { userPreference.user }
     }
 
     override fun updateUser(newUser: User) {

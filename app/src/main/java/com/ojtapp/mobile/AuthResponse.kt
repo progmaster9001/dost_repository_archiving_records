@@ -1,7 +1,13 @@
 package com.ojtapp.mobile
 
 data class AuthResponse(
-    val message: String,
-    val token: String?,
-    val accountType: String?
+    val token: String,
+    val user: AuthUser
+)
+
+data class AuthUser(
+    val id: Int,
+    val username: String,
+    val email: String? = null,
+    val role: String? = null
 )
