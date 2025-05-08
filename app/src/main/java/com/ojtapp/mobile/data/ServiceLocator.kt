@@ -48,7 +48,7 @@ object ServiceLocator {
         checkInitialization()
 
         if (repositoryProvider.value.mode == mode) {
-            emit(Resource.Success("Current Repository Mode: ${mode.name}."))
+            emit(Resource.Success("Current Repositories: ${mode.name}"))
             return@flow
         }
 
@@ -61,7 +61,7 @@ object ServiceLocator {
                 RepositoryMode.LOCAL -> LocalOnlyProvider
             }
             repositoryProvider.update { provider }
-            emit(Resource.Success("Successfully switched to ${mode.name} Repositories."))
+            emit(Resource.Success("Current Repositories: ${mode.name}"))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Unknown error occurred."))
         }

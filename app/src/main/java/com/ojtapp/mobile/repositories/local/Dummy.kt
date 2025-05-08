@@ -6,7 +6,7 @@ import com.ojtapp.mobile.model.GiaRecord
 import com.ojtapp.mobile.model.SetupRecord
 
 object Dummy {
-    val fileResponses = listOf(
+    private val fileResponses = listOf(
         FileResponse(
             path = "",
             files = listOf(
@@ -46,6 +46,7 @@ object Dummy {
             files = listOf(
                 FileEntry("music", true),
                 FileEntry("games", true),
+                FileEntry("memes_dump", true),
                 FileEntry("virus_bait.exe", false),
                 FileEntry("tax_evasion_software.zip", false)
             )

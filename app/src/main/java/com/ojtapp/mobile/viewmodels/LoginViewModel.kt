@@ -40,6 +40,7 @@ class LoginViewModel(
     val errorMessage = _errorMessage.asStateFlow()
 
     private val _switchMode = MutableStateFlow(ServiceLocator.currentRepositoryProvider.value.mode)
+    val switchMode = _switchMode.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val switchStatus = _switchMode.flatMapLatest { mode ->

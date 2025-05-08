@@ -103,8 +103,7 @@ fun FilePickerScreen(
         contentWindowInsets = WindowInsets.statusBars
     ) { innerPadding ->
         AnimatedContent(
-            targetState = state,
-            modifier = Modifier.padding(horizontal = 8.dp)
+            targetState = state
         ) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
                 when(it){
@@ -116,7 +115,7 @@ fun FilePickerScreen(
                             Text("Files are empty.")
                         }else{
                             LazyColumn(
-                                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                                modifier = Modifier.fillMaxSize().padding(innerPadding).padding(bottom = 32.dp),
                             ) {
                                 items(files) { file ->
                                     FileItem(

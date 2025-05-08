@@ -1,5 +1,6 @@
 package com.ojtapp.mobile.repositories.local
 
+import android.util.Log
 import com.ojtapp.mobile.repositories.UserRepository
 import com.ojtapp.mobile.model.User
 import com.ojtapp.mobile.model.UserPreference
@@ -20,6 +21,7 @@ class TestUserRepository(
     }
 
     override fun updateUser(newUser: User) {
+        Log.d("UserRep", newUser.token)
         userPreference.user = newUser
         _user.update { newUser }
     }

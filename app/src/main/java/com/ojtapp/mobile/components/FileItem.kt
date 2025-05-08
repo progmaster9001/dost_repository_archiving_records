@@ -71,7 +71,7 @@ fun FileItem(
         )
     ) {
         Row(
-            modifier = Modifier.height(48.dp).fillMaxWidth().padding(12.dp),
+            modifier = Modifier.height(48.dp).fillMaxWidth().padding(vertical = 12.dp, horizontal = 18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(

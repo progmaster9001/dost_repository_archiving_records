@@ -298,7 +298,7 @@ fun SetupFilterContent(
 
     val buttonColors = when(activateReset){
         true -> ButtonDefaults.buttonColors().copy(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer)
-        false -> ButtonDefaults.buttonColors().copy(containerColor = Color(133, 224, 224, 255))
+        false -> ButtonDefaults.buttonColors().copy(containerColor = Color(108, 172, 192, 255))
     }
     val text = when(activateReset){
         true -> "Reset"

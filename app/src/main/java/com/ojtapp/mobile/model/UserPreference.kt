@@ -4,6 +4,7 @@ import android.content.SharedPreferences
 import kotlinx.serialization.json.Json
 
 class UserPreference(private val sharedPreferences: SharedPreferences) {
+
     companion object {
         private const val KEY_USER = "key_user"
     }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -50,7 +51,7 @@ fun RecordTableLayout(
 ) {
     LazyColumn(
         modifier = modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .horizontalScroll(rememberScrollState())
             .padding(horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -76,7 +77,7 @@ fun RecordTableLayout(
 
             itemsIndexed(records) { index, record ->
                 Card(
-                    shape = RectangleShape, // No rounding for list items
+                    shape = RectangleShape,
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     ),
