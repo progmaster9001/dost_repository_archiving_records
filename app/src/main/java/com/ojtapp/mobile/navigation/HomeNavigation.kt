@@ -27,7 +27,7 @@ fun NavGraphBuilder.homeScreen(
     onFileClick: () -> Unit
 ){
     composable<Home> {
-        val viewModel = MainViewModel()
+        val viewModel = viewModel<MainViewModel>()
         MainRoute(
             viewModel = viewModel,
             logout = onLogout,

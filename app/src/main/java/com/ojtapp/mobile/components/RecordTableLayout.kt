@@ -106,7 +106,8 @@ fun RecordHeader(
     records: List<Record>,
     modifier: Modifier = Modifier
 ) {
-    val fieldNames = records.firstOrNull()?.let { getFieldNames(it) } ?: emptyList()
+    val firstRecord = records.firstOrNull()
+    val fieldNames = firstRecord?.let { getFieldNames(it).mapToHeaders(firstRecord) } ?: emptyList()
 
     Row(
         modifier = modifier
@@ -117,15 +118,13 @@ fun RecordHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         fieldNames.forEachIndexed { index, column ->
-            if (column != null) {
-                RarCell(
-                    value = column,
-                    index = index,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    isHeader = true
-                )
-            }
+            RarCell(
+                value = column,
+                index = index,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                isHeader = true
+            )
         }
     }
 }
@@ -232,6 +231,40 @@ fun getFieldNames(record: Record): List<String?>? = when (record) {
     is GiaRecord -> giaFieldNames
     is SetupRecord -> setupFieldNames
     else -> null
+}
+
+fun List<String?>?.mapToHeaders(record: Record): List<String>? {
+    return when(record){
+        is GiaRecord -> this?.map { name ->
+            when(name){
+                "id" -> "ID"
+                "projectTitle" -> "Project Title"
+                "beneficiary" -> "Beneficiary"
+                "location" -> "Location"
+                "projectDuration" -> "Project Duration"
+                "projectCost" -> "Project Cost"
+                "remarks" -> "Remarks"
+                "className" -> "Class Name"
+                else -> "Unknown Header"
+            }
+        }
+        is SetupRecord -> this?.map { name ->
+            when(name){
+                "id" -> "ID"
+                "firmName" -> "Firm Name"
+                "proponent" -> "Proponent"
+                "amountApproved" -> "Amount Approved"
+                "yearApproved" -> "Year Approved"
+                "location" -> "Location"
+                "district" -> "District"
+                "sector" -> "Sector"
+                "status" -> "Status"
+                "listOfEquipment" -> "List Of Equipment"
+                else -> "Unknown Header"
+            }
+        }
+        else -> emptyList()
+    }
 }
 
 fun getFieldValues(record: Record): List<String?>? = getFieldNames(record)?.map { it?.let { name -> getFieldValue(record, name) } }

@@ -8,72 +8,168 @@ import com.ojtapp.mobile.model.SetupRecord
 object Dummy {
     val fileResponses = listOf(
         FileResponse(
-            path = "/root",
+            path = "",
             files = listOf(
                 FileEntry("documents", true),
                 FileEntry("downloads", true),
-                FileEntry("readme.txt", false)
+                FileEntry("readme.txt", false),
+                FileEntry("trash", true),
+                FileEntry("secret", true)
             )
         ),
         FileResponse(
-            path = "/root/documents",
+            path = "/documents",
             files = listOf(
                 FileEntry("taxes_2023", true),
-                FileEntry("resume.pdf", false)
+                FileEntry("resume.pdf", false),
+                FileEntry("project_ideas", true)
             )
         ),
         FileResponse(
-            path = "/root/documents/taxes_2023",
+            path = "/documents/taxes_2023",
             files = listOf(
                 FileEntry("form_a.pdf", false),
                 FileEntry("form_b.pdf", false),
-                FileEntry("notes.txt", false)
+                FileEntry("notes.txt", false),
+                FileEntry("i_will_cry.xlsx", false)
             )
         ),
         FileResponse(
-            path = "/root/downloads",
+            path = "/documents/project_ideas",
+            files = listOf(
+                FileEntry("meme_generator.md", false),
+                FileEntry("world_domination.plan", false)
+            )
+        ),
+        FileResponse(
+            path = "/downloads",
             files = listOf(
                 FileEntry("music", true),
                 FileEntry("games", true),
-                FileEntry("virus_bait.exe", false)
+                FileEntry("virus_bait.exe", false),
+                FileEntry("tax_evasion_software.zip", false)
             )
         ),
         FileResponse(
-            path = "/root/downloads/music",
+            path = "/downloads/music",
             files = listOf(
                 FileEntry("metallica.mp3", false),
-                FileEntry("karaoke_hits", true)
+                FileEntry("karaoke_hits", true),
+                FileEntry("baby_shark.mp3", false),
+                FileEntry("cringe_playlist", true)
             )
         ),
         FileResponse(
-            path = "/root/downloads/music/karaoke_hits",
+            path = "/downloads/music/karaoke_hits",
             files = listOf(
                 FileEntry("my_heart_will_go_on.mp3", false),
-                FileEntry("bohemian_rhapsody.mp3", false)
+                FileEntry("bohemian_rhapsody.mp3", false),
+                FileEntry("bakit_pa.mp3", false)
             )
         ),
         FileResponse(
-            path = "/root/downloads/games",
+            path = "/downloads/music/cringe_playlist",
+            files = listOf(
+                FileEntry("friday_rebecca_black.mp3", false),
+                FileEntry("ppap_pen_pineapple_apple_pen.mp3", false)
+            )
+        ),
+        FileResponse(
+            path = "/downloads/games",
             files = listOf(
                 FileEntry("doom", true),
-                FileEntry("tetris.exe", false)
+                FileEntry("tetris.exe", false),
+                FileEntry("minesweeper_legacy", true)
             )
         ),
         FileResponse(
-            path = "/root/downloads/games/doom",
+            path = "/downloads/games/doom",
             files = listOf(
                 FileEntry("doom_launcher.sh", false),
-                FileEntry("hell_assets", true)
+                FileEntry("hell_assets", true),
+                FileEntry("satanic_settings.cfg", false)
             )
         ),
         FileResponse(
-            path = "/root/downloads/games/doom/hell_assets",
+            path = "/downloads/games/doom/hell_assets",
             files = listOf(
                 FileEntry("demons.txt", false),
-                FileEntry("flames.png", false)
+                FileEntry("flames.png", false),
+                FileEntry("bg_music.mp3", false)
+            )
+        ),
+        FileResponse(
+            path = "/downloads/games/minesweeper_legacy",
+            files = listOf(
+                FileEntry("mines.classic", false),
+                FileEntry("boom.wav", false)
+            )
+        ),
+        FileResponse(
+            path = "/downloads/memes_dump",
+            files = listOf(
+                FileEntry("grumpy_cat.jpg", false),
+                FileEntry("shrek_is_love.png", false),
+                FileEntry("distracted_boyfriend.jpeg", false),
+                FileEntry("this_is_fine.gif", false),
+                FileEntry("cat_jam.mp4", false),
+                FileEntry("rickroll.mp4", false),
+                FileEntry("pepe_sad.png", false),
+                FileEntry("elon_musk_smoking.jpg", false),
+                FileEntry("doge_coin_to_the_moon.gif", false),
+                FileEntry("bonk.jpg", false),
+                FileEntry("woman_yelling_at_cat.jpg", false),
+                FileEntry("giga_chad.png", false),
+                FileEntry("baby_yoda.jpg", false),
+                FileEntry("sigma_grindset.png", false),
+                FileEntry("shiba_dance.gif", false),
+                FileEntry("among_us_sus.mp4", false),
+                FileEntry("is_this_a_pigeon.png", false),
+                FileEntry("crying_jordan.jpg", false),
+                FileEntry("spongebob_mocking.jpg", false),
+                FileEntry("meme_template1.png", false),
+                FileEntry("meme_template2.png", false),
+                FileEntry("meme_template3.png", false),
+                FileEntry("meme_template4.png", false),
+                FileEntry("meme_template5.png", false),
+                FileEntry("i_have_no_idea_what_im_doing.jpg", false),
+                FileEntry("unexpected_john_cena.mp3", false)
+            )
+        ),
+        FileResponse(
+            path = "/trash",
+            files = listOf(
+                FileEntry("deleted_screenshot.png", false),
+                FileEntry("oops.txt", false),
+                FileEntry("angry_letter_to_boss.docx", false)
+            )
+        ),
+        FileResponse(
+            path = "/secret",
+            files = listOf(
+                FileEntry("hidden_folder", true),
+                FileEntry("dont_open_this.txt", false),
+                FileEntry(".env", false)
+            )
+        ),
+        FileResponse(
+            path = "/secret/hidden_folder",
+            files = listOf(
+                FileEntry("plans", true),
+                FileEntry("spicy_meme.jpg", false)
+            )
+        ),
+        FileResponse(
+            path = "/secret/hidden_folder/plans",
+            files = listOf(
+                FileEntry("phase1.md", false),
+                FileEntry("phase2.md", false),
+                FileEntry("ultimate_revenge_plan.txt", false)
             )
         )
     )
+
+    val fileResponsesMap = fileResponses.associateBy { it.path }
 
     val giaRecordsList = listOf(
         GiaRecord(1, "Eco Green Initiative", "John Doe", "New York", "2 Years", 500_000.0, "ongoing procurement", "CEST", "files/eco_green.pdf"),

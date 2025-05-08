@@ -1,6 +1,9 @@
 package com.ojtapp.mobile.screens
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -25,16 +28,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ojtapp.mobile.R
 import com.ojtapp.mobile.components.FileItem
 import com.ojtapp.mobile.data.ServiceLocator
 import com.ojtapp.mobile.model.FileResponse
+import com.ojtapp.mobile.model.Resource
 import kotlinx.coroutines.delay
 
 sealed interface FilePickerState{
-    data class Success(val file: FileResponse?): FilePickerState
+    data class Success(val response: FileResponse?): FilePickerState
     data class Error(val error: String): FilePickerState
     data object Loading: FilePickerState
 }
@@ -42,7 +47,7 @@ sealed interface FilePickerState{
 @Composable
 fun FilePickerRoute(
     modifier: Modifier = Modifier,
-    path: String,
+    currentPath: String,
     fileClick: (String) -> Unit,
     back: () -> Unit
 ) {
@@ -50,15 +55,20 @@ fun FilePickerRoute(
     val state by produceState<FilePickerState>(initialValue = FilePickerState.Loading) {
         value = try {
             delay(1000)
-            FilePickerState.Success(ServiceLocator.getFileRepository().fetchFiles(path))
+            val resource = ServiceLocator.currentRepositoryProvider.value.fileRepository.fetchFiles(currentPath)
+            when(resource){
+                is Resource.Error -> FilePickerState.Error(resource.message)
+                Resource.Loading -> FilePickerState.Success(null)
+                is Resource.Success -> FilePickerState.Success(resource.data)
+            }
         } catch (e: Exception) {
-            FilePickerState.Error(e.message ?: "")
+            FilePickerState.Error(e.message ?: "Unknown Error.")
         }
     }
 
     FilePickerScreen(
         state = state,
-        currentDirectory = path,
+        currentDirectory = currentPath,
         fileClick = fileClick,
         back = back
     )
@@ -76,10 +86,7 @@ fun FilePickerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Row {
-                        Text(currentDirectory, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
+                title = { Row { Text(currentDirectory.ifEmpty { "File Server" }, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 },
                 navigationIcon = {
                     IconButton(
@@ -97,25 +104,29 @@ fun FilePickerScreen(
     ) { innerPadding ->
         AnimatedContent(
             targetState = state,
-            modifier = Modifier.padding(innerPadding).padding(horizontal = 8.dp)
+            modifier = Modifier.padding(horizontal = 8.dp)
         ) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
                 when(it){
-                    is FilePickerState.Error -> Text(it.error)
+                    is FilePickerState.Error -> Text(it.error, textAlign = TextAlign.Center)
                     FilePickerState.Loading -> CircularProgressIndicator()
                     is FilePickerState.Success -> {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            items(it.file?.files ?: emptyList()){ file ->
-                                FileItem(
-                                    isDirectory = file.isDirectory,
-                                    path = currentDirectory,
-                                    icon = if(file.isDirectory) R.drawable.folder_open else R.drawable.file,
-                                    fileName = file.name,
-                                    fileClick = fileClick
-                                )
+                        val files = it.response?.files ?: emptyList()
+                        if(files.isEmpty()){
+                            Text("Files are empty.")
+                        }else{
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                            ) {
+                                items(files) { file ->
+                                    FileItem(
+                                        isDirectory = file.isDirectory,
+                                        path = currentDirectory,
+                                        icon = if(file.isDirectory) R.drawable.folder_open else R.drawable.file,
+                                        fileName = file.name,
+                                        fileClick = fileClick
+                                    )
+                                }
                             }
                         }
                     }

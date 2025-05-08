@@ -1,5 +1,12 @@
 package com.ojtapp.mobile.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOut
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.ui.unit.center
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -24,11 +31,13 @@ fun NavController.navigateToFilePickerScreen(path: String){
 
 fun NavGraphBuilder.filePickerGraph(fileClick: (String) -> Unit, back: () -> Unit){
     navigation<FilePickerGraph>(
-        startDestination = FilerPicker(path = "")
+        startDestination = FilerPicker(path = ""),
+        enterTransition = { slideInVertically(initialOffsetY = { 120 }) },
+        exitTransition = { slideOutVertically(targetOffsetY = { 320 }) + fadeOut(tween(durationMillis = 250)) }
     ){
         composable<FilerPicker> {
             FilePickerRoute(
-                path = it.toRoute<FilerPicker>().path,
+                currentPath = it.toRoute<FilerPicker>().path,
                 fileClick = fileClick,
                 back = back,
             )

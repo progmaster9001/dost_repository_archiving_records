@@ -29,73 +29,59 @@ data class LoginState(
     val password: String = ""
 )
 
-sealed interface SwitchEvent{
-    data object Local: SwitchEvent
-    data object Remote: SwitchEvent
-}
-
-class LoginViewModel: ViewModel() {
-
-    val hasToken = ServiceLocator.getUserRepository().user
-        .map { user ->
-            user.token.isNotEmpty()
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = false
-        )
-
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage = _errorMessage.asStateFlow()
+class LoginViewModel(
+    private val serviceLocator: ServiceLocator = ServiceLocator
+) : ViewModel() {
 
     private val _loginState = MutableStateFlow(LoginState())
     val loginState = _loginState.asStateFlow()
 
-    private val _switchStatus = MutableStateFlow(RepositoryMode.LOCAL)
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage = _errorMessage.asStateFlow()
+
+    private val _switchMode = MutableStateFlow(ServiceLocator.currentRepositoryProvider.value.mode)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val switchResult = _switchStatus.flatMapLatest { status ->
-        when(status){
-            RepositoryMode.LOCAL -> ServiceLocator.switchToLocalRepositoriesFlow(status)
-            RepositoryMode.REMOTE -> ServiceLocator.switchToRemoteRepositoriesFlow(status)
-        }
+    val switchStatus = _switchMode.flatMapLatest { mode ->
+        serviceLocator.switchRepositoryProvider(mode)
     }.map { resource ->
-        when(resource){
-            is Resource.Error -> resource.message
-            Resource.Loading -> "Switching..."
+        when (resource) {
             is Resource.Success -> resource.data
+            is Resource.Error -> "Error: ${resource.message}"
+            is Resource.Loading -> "Switching repositories..."
         }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.Eagerly,
-        initialValue = null
-    )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, "Initialized")
 
-    fun onEmailChange(email: String){
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val hasToken = serviceLocator.currentRepositoryProvider
+        .flatMapLatest { provider ->
+            provider.userRepository.user
+        }
+        .map { user -> user.token.isNotEmpty() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    fun login(email: String, password: String) {
+        viewModelScope.launch {
+            val result = serviceLocator.currentRepositoryProvider.value.authRepository.login(email, password)
+            result.onSuccess { token ->
+                val user = User("mj", email, token)
+                serviceLocator.currentRepositoryProvider.value.userRepository.updateUser(user)
+            }
+            result.onFailure { e ->
+                _errorMessage.value = e.message
+            }
+        }
+    }
+
+    fun onEmailChange(email: String) {
         _loginState.update { it.copy(email = email) }
     }
 
-    fun onPasswordChange(password: String){
+    fun onPasswordChange(password: String) {
         _loginState.update { it.copy(password = password) }
     }
 
-    fun login(email: String, password: String){
-        viewModelScope.launch {
-            val result = ServiceLocator.getAuthRepository().login(email, password)
-            result.onSuccess { token ->
-                ServiceLocator.getUserRepository().updateUser(User("mj", email, token))
-            }
-            result.onFailure { e -> _errorMessage.update { e.message } }
-        }
-    }
-
-    fun switchRepository(event: SwitchEvent) {
-        viewModelScope.launch {
-            when(event){
-                SwitchEvent.Local -> { _switchStatus.update { RepositoryMode.LOCAL } }
-                SwitchEvent.Remote -> { _switchStatus.update { RepositoryMode.REMOTE } }
-            }
-        }
+    fun switchRepositoryMode(mode: RepositoryMode) {
+        _switchMode.update{ mode }
     }
 }

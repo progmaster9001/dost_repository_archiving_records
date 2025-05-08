@@ -23,7 +23,7 @@ fun NavController.navigateToLogin(){
 
 fun NavGraphBuilder.loginScreen(onLogin: () -> Unit){
     composable<Login> {
-        val loginViewModel = LoginViewModel()
+        val loginViewModel = viewModel<LoginViewModel>()
         LoginRoute(viewModel = loginViewModel, onLogin = onLogin)
     }
 }

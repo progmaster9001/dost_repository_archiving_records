@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -186,41 +187,34 @@ private fun MainScreen(
                 )
             }
         }
-        Box(modifier = Modifier.padding(innerPadding)){
-            Surface(
-                modifier = modifier,
-                color = MaterialTheme.colorScheme.surfaceContainerLow
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceContainerLow
+        ) {
+            Column(
+                modifier = Modifier.padding(innerPadding).fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        val records = when(recordsState){
-                            is RecordState.Error -> emptyList()
-                            RecordState.Loading -> emptyList()
-                            is RecordState.Success -> recordsState.records
-                        }
-                        Text(
-                            "Records Found: ${records.size}",
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                        LayoutSwitch(
-                            firstText = "Table",
-                            secondText = "Card",
-                            isTableLayout = currentLayout == Layout.TABLE,
-                            setLayout = setLayout,
-                        )
+                    val records = when(recordsState){
+                        is RecordState.Error -> emptyList()
+                        RecordState.Loading -> emptyList()
+                        is RecordState.Success -> recordsState.records
                     }
-                    CompositionLocalProvider(
-                        LocalRecordTab provides currentTab
-                    ) {
-                        RecordsContainer(currentLayout = currentLayout, recordsState = recordsState)
-                    }
+                    Text(
+                        "Records Found: ${records.size}",
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                    LayoutSwitch(
+                        firstText = "Table",
+                        secondText = "Card",
+                        isTableLayout = currentLayout == Layout.TABLE,
+                        setLayout = setLayout,
+                    )
                 }
+                RecordsContainer(currentLayout = currentLayout, recordsState = recordsState)
             }
         }
     }
@@ -296,17 +290,17 @@ fun AppHeader(
 @Composable
 fun RecordsContainer(
     currentLayout: Layout,
-    recordsState: RecordState,
-    modifier: Modifier = Modifier
+    recordsState: RecordState
 ) {
     AnimatedContent(
-        modifier = modifier.fillMaxSize(),
         targetState = recordsState,
     ) { state ->
-        when (state) {
-            is RecordState.Error -> Text(text = state.error)
-            RecordState.Loading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            is RecordState.Success -> RecordLayout(currentLayout, state.records)
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+            when (state) {
+                is RecordState.Error -> Text(text = state.error, textAlign = TextAlign.Center)
+                RecordState.Loading -> CircularProgressIndicator()
+                is RecordState.Success -> RecordLayout(currentLayout, state.records, Modifier.align(Alignment.TopStart))
+            }
         }
     }
 }
@@ -317,7 +311,7 @@ fun RecordLayout(
     records: List<Record>,
     modifier: Modifier = Modifier
 ) {
-    AnimatedContent(targetState = currentLayout) { layout ->
+    AnimatedContent(modifier = modifier, targetState = currentLayout) { layout ->
         when(layout){
             Layout.CARD -> RecordCardLayout(records)
             Layout.TABLE -> RecordTableLayout(records)

@@ -5,9 +5,11 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
@@ -36,44 +38,48 @@ fun FileItem(
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult(),
-        onResult = {
-            Log.d("FILE_LAUNCH", "Opened with result code: ${it.resultCode}")
-        }
+        onResult = { Log.d("FILE_LAUNCH", "Opened with result code: ${it.resultCode}") }
     )
     val scope = rememberCoroutineScope()
 
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(2.dp).clickable(
+    Box(
+        modifier = Modifier.clickable(
             onClick = {
-                if(isDirectory) fileClick(fileName) else{
+                val fullPath = "$path/$fileName"
+                if(isDirectory) fileClick(fullPath) else{
                     scope.launch {
-                        val response = ServiceLocator.getApiService().downloadFile(path = "$path/$fileName")
-                        val file = response.body()?.let { saveDownloadedFile(response = it, fileName = fileName, context) }
-                        val uri = file?.let { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", it)
+                        val file = ServiceLocator.currentRepositoryProvider.value.fileRepository.downloadFile(context, fileName, fullPath)
+                        if(file != null){
+                            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                            val mimeType = when (file.extension.lowercase()) {
+                                "pdf" -> "application/pdf"
+                                "jpg", "jpeg" -> "image/jpeg"
+                                "png" -> "image/png"
+                                else -> "*/*"
+                            }
+                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                setDataAndType(uri, mimeType)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            launcher.launch(intent)
+                        }else{
+                            Log.d("Download Result", "File does not exist.")
                         }
-                        val mimeType = when (file?.extension?.lowercase()) {
-                            "pdf" -> "application/pdf"
-                            "jpg", "jpeg" -> "image/jpeg"
-                            "png" -> "image/png"
-                            else -> "*/*"
-                        }
-
-                        val intent = Intent(Intent.ACTION_VIEW).apply {
-                            setDataAndType(uri, mimeType)
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-                        launcher.launch(intent)
                     }
                 }
             }
-        ),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = "file_icon"
         )
-        Spacer(Modifier.width(Dimensions.basicSpacing))
-        Text(fileName)
+    ) {
+        Row(
+            modifier = Modifier.height(48.dp).fillMaxWidth().padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = "file_icon"
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(fileName)
+        }
     }
 }

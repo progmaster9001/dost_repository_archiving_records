@@ -52,10 +52,12 @@ sealed interface DialogEvent{
     data object OpenDialog: DialogEvent
 }
 
-class MainViewModel: ViewModel(){
+class MainViewModel(
+    serviceLocator: ServiceLocator = ServiceLocator
+): ViewModel(){
 
-    private val userRepository = ServiceLocator.getUserRepository()
-    private val recordsRepository = ServiceLocator.getRecordsRepository()
+    private val userRepository = serviceLocator.currentRepositoryProvider.value.userRepository
+    private val recordsRepository = ServiceLocator.currentRepositoryProvider.value.recordsRepository
 
     val user = userRepository.user.stateIn(
         scope = viewModelScope,

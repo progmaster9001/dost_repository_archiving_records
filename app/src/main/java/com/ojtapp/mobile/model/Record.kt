@@ -1,5 +1,6 @@
 package com.ojtapp.mobile.model
 
+import com.ojtapp.mobile.components.util.formatAsPeso
 import kotlin.reflect.full.memberProperties
 
 interface Record
@@ -7,9 +8,10 @@ interface Record
 fun getFieldValue(record: Record, fieldName: String): String {
     return try {
         val property = record::class.memberProperties.find { it.name == fieldName }
-        property?.getter?.call(record)?.toString() ?: ""
+        val value = property?.getter?.call(record)
+        return if(value is Double){ value.formatAsPeso() } else{ value.toString() }
     } catch (e: Exception) {
-        ""
+        "Error Field"
     }
 }
 

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,12 +20,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ojtapp.mobile.components.Dimensions
-import com.ojtapp.mobile.viewmodels.LoginState
-import com.ojtapp.mobile.viewmodels.LoginViewModel
 import com.ojtapp.mobile.components.RarButton
 import com.ojtapp.mobile.components.RarTextField
-import com.ojtapp.mobile.data.ServiceLocator
-import com.ojtapp.mobile.viewmodels.SwitchEvent
+import com.ojtapp.mobile.data.RepositoryMode
+import com.ojtapp.mobile.viewmodels.LoginState
+import com.ojtapp.mobile.viewmodels.LoginViewModel
 
 @Composable
 fun LoginRoute(
@@ -36,30 +34,30 @@ fun LoginRoute(
 ) {
 
     val state by viewModel.loginState.collectAsStateWithLifecycle()
-    val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
+    val message by viewModel.errorMessage.collectAsStateWithLifecycle()
     val hasToken by viewModel.hasToken.collectAsStateWithLifecycle()
     var isDialogTriggered by remember { mutableStateOf(false) }
-    val message by viewModel.switchResult.collectAsStateWithLifecycle()
+    val switchMessage by viewModel.switchStatus.collectAsStateWithLifecycle()
 
     LaunchedEffect(hasToken) {
         Log.d("HasToken", "Has token: $hasToken")
         if(hasToken) onLogin()
     }
 
-    LaunchedEffect(errorMessage) {
-        if(errorMessage != null) isDialogTriggered = true
+    LaunchedEffect(message) {
+        if(message?.isNotEmpty() == true) isDialogTriggered = true
     }
 
     SwitchDialog(
         isDialogTriggered = isDialogTriggered,
-        message = message,
+        switchMessage = switchMessage,
         onDismissRequest = { isDialogTriggered = false },
-        switchRepository = viewModel::switchRepository
+        switchRepository = viewModel::switchRepositoryMode
     )
 
     LoginScreen(
         state = state,
-        errorMessage = errorMessage,
+        message = message,
         click = { isDialogTriggered = true },
         onEmailChange = viewModel::onEmailChange,
         onPasswordChange = viewModel::onPasswordChange,
@@ -70,7 +68,7 @@ fun LoginRoute(
 @Composable
 private fun LoginScreen(
     state: LoginState,
-    errorMessage: String?,
+    message: String?,
     click: () -> Unit,
     modifier: Modifier = Modifier,
     onEmailChange: (String) -> Unit,
@@ -98,28 +96,28 @@ private fun LoginScreen(
         RarButton {
             login(state.email, state.password)
         }
-        if(errorMessage != null) Text(errorMessage)
+        if(message != null) Text(message)
     }
 }
 
 @Composable
 fun SwitchDialog(
     modifier: Modifier = Modifier,
-    message: String?,
+    switchMessage: String?,
     isDialogTriggered: Boolean,
     onDismissRequest: () -> Unit,
-    switchRepository: (SwitchEvent) -> Unit
+    switchRepository: (RepositoryMode) -> Unit
 ) {
     if(isDialogTriggered){
         Dialog(onDismissRequest = onDismissRequest) {
             Card {
                 Text("Do you want to switch to Repositories?")
                 Row {
-                    Button(onClick = { switchRepository(SwitchEvent.Local)}) { Text("Local") }
-                    Button(onClick = { switchRepository(SwitchEvent.Remote)}) { Text("Remote") }
+                    Button(onClick = { switchRepository(RepositoryMode.LOCAL)}) { Text("Local") }
+                    Button(onClick = { switchRepository(RepositoryMode.REMOTE)}) { Text("Remote") }
                     Button(onClick = onDismissRequest) { Text("No") }
                 }
-                if(message != null) Text(message)
+                if(switchMessage != null) Text(switchMessage)
             }
         }
     }

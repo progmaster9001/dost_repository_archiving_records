@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.ojtapp.mobile.components.util.formatAsPeso
 import com.ojtapp.mobile.model.GiaRecord
 import com.ojtapp.mobile.model.Record
 import com.ojtapp.mobile.model.SetupRecord
@@ -102,7 +103,7 @@ private fun GiaRecordContent(record: GiaRecord) {
     FieldItem(label = "Beneficiary", value = record.beneficiary)
     FieldItem(label = "Location", value = record.location)
     FieldItem(label = "Duration", value = record.projectDuration)
-    FieldItem(label = "Cost", value = record.projectCost.toString())
+    FieldItem(label = "Cost", value = record.projectCost.formatAsPeso())
     FieldItem(label = "Remarks", value = record.remarks.orEmpty())
     FieldItem(label = "Class", value = record.className)
 }
@@ -113,7 +114,7 @@ private fun SetupRecordContent(record: SetupRecord) {
     FieldItem(label = "Proponent", value = record.proponent ?: "")
     FieldItem(label = "District", value = record.district ?: "")
     FieldItem(label = "List of Equipment", value = record.listOfEquipment ?: "")
-    FieldItem(label = "Amount Approved", value = record.amountApproved.toString())
+    FieldItem(label = "Amount Approved", value = record.amountApproved?.formatAsPeso() ?: "")
     FieldItem(label = "Year Approved", value = record.yearApproved.toString())
     FieldItem(label = "Location", value = record.location.orEmpty())
     FieldItem(label = "Sector", value = record.sector)
