@@ -1,5 +1,17 @@
 package com.ojtapp.mobile.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,14 +21,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -24,6 +44,7 @@ import com.ojtapp.mobile.components.util.formatAsPeso
 import com.ojtapp.mobile.model.GiaRecord
 import com.ojtapp.mobile.model.Record
 import com.ojtapp.mobile.model.SetupRecord
+import kotlinx.coroutines.launch
 
 @Composable
 private fun RecordHeader(title: String) {
@@ -40,11 +61,22 @@ fun RecordCardLayout(
     records: List<Record>,
     modifier: Modifier = Modifier
 ) {
+
+    val bounceSpec = spring<Float>(
+        dampingRatio = Spring.DampingRatioLowBouncy,
+        stiffness = Spring.StiffnessLow
+    )
+
+    val exitFadeSpec = tween<Float>(
+        durationMillis = 300
+    )
+
     LazyColumn(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Dimensions.horizontalPadding),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item { Spacer(Modifier.height(4.dp)) }
 
@@ -56,9 +88,49 @@ fun RecordCardLayout(
                 )
             }
         } else {
-            items(records) { record ->
-                RecordCard(record = record)
-                Spacer(Modifier.height(12.dp))
+
+            items(
+                items = records,
+                key = { record ->
+                    (record as? GiaRecord)?.id
+                        ?: (record as? SetupRecord)?.id
+                        ?: record.hashCode()
+                }
+            ) { record ->
+                // Scale and alpha animatables
+                val scale = remember { Animatable(0.7f) }
+                val alpha = remember { Animatable(0f) }
+
+                LaunchedEffect(Unit) {
+                    launch {
+                        scale.animateTo(
+                            targetValue = 1f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        )
+                    }
+                    launch {
+                        alpha.animateTo(
+                            targetValue = 1f,
+                            animationSpec = tween(durationMillis = 300)
+                        )
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .graphicsLayer {
+                            this.scaleX = scale.value
+                            this.scaleY = scale.value
+                            this.alpha = alpha.value
+                        }
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                ) {
+                    RecordCard(record = record)
+                }
             }
         }
 
@@ -79,7 +151,7 @@ fun RecordCard(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 6.dp
+            defaultElevation = 2.dp
         ),
         shape = RoundedCornerShape(16.dp)
     ) {

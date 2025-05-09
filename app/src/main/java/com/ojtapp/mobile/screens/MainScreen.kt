@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +29,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,29 +56,29 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ojtapp.mobile.viewmodels.DialogEvent
-import com.ojtapp.mobile.viewmodels.DialogState
+import com.ojtapp.mobile.R
 import com.ojtapp.mobile.components.Dimensions
 import com.ojtapp.mobile.components.FilterContent
-import com.ojtapp.mobile.viewmodels.FilterEvent
 import com.ojtapp.mobile.components.FilterSheet
 import com.ojtapp.mobile.components.FilteredTextContent
-import com.ojtapp.mobile.components.util.GiaRecordFilterCriteria
-import com.ojtapp.mobile.viewmodels.Layout
 import com.ojtapp.mobile.components.LayoutSwitch
-import com.ojtapp.mobile.viewmodels.MainViewModel
-import com.ojtapp.mobile.R
-import com.ojtapp.mobile.model.Record
+import com.ojtapp.mobile.components.RarLoadingProgressIndicator
 import com.ojtapp.mobile.components.RecordCardLayout
-import com.ojtapp.mobile.components.RecordNavigationEvent
-import com.ojtapp.mobile.viewmodels.RecordState
 import com.ojtapp.mobile.components.RecordTableLayout
-import com.ojtapp.mobile.components.util.SetupRecordFilterCriteria
-import com.ojtapp.mobile.model.Type
 import com.ojtapp.mobile.components.TypeTabRow
-import com.ojtapp.mobile.model.User
 import com.ojtapp.mobile.components.WarningDialog
+import com.ojtapp.mobile.components.util.GiaRecordFilterCriteria
+import com.ojtapp.mobile.components.util.SetupRecordFilterCriteria
 import com.ojtapp.mobile.components.util.countFilters
+import com.ojtapp.mobile.model.Record
+import com.ojtapp.mobile.model.Type
+import com.ojtapp.mobile.model.User
+import com.ojtapp.mobile.viewmodels.DialogEvent
+import com.ojtapp.mobile.viewmodels.DialogState
+import com.ojtapp.mobile.viewmodels.FilterEvent
+import com.ojtapp.mobile.viewmodels.Layout
+import com.ojtapp.mobile.viewmodels.MainViewModel
+import com.ojtapp.mobile.viewmodels.RecordState
 
 @Composable
 fun MainRoute(
@@ -187,8 +185,9 @@ private fun MainScreen(
                 )
             }
         }
-        Surface(
-            color = MaterialTheme.colorScheme.surfaceContainerLow
+
+        Box(
+            modifier = Modifier.padding(horizontal = 16.dp)
         ) {
             Column(
                 modifier = Modifier.padding(innerPadding).fillMaxWidth()
@@ -229,14 +228,17 @@ fun AppHeader(
     setupFilterState: SetupRecordFilterCriteria,
     resetFilter: () -> Unit,
     toggleDialog: (DialogEvent) -> Unit) {
-    Box(
-        modifier = Modifier
-            .shadowWithClipIntersect(
-                elevation = 4.dp,
-                shape = RectangleShape
-            )
-            .background(MaterialTheme.colorScheme.surfaceBright)
-    ){
+//    Box(
+//        modifier = Modifier
+//            .shadowWithClipIntersect(
+//                elevation = 4.dp,
+//                shape = RectangleShape
+//            )
+//            .background(MaterialTheme.colorScheme.surfaceBright)
+//    ){
+//
+//    }
+    Box(modifier = Modifier.background(MaterialTheme.colorScheme.surfaceBright)){
         Column(
             modifier = Modifier
                 .then(
@@ -298,7 +300,7 @@ fun RecordsContainer(
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
             when (state) {
                 is RecordState.Error -> Text(text = state.error, textAlign = TextAlign.Center)
-                RecordState.Loading -> CircularProgressIndicator()
+                RecordState.Loading -> RarLoadingProgressIndicator()
                 is RecordState.Success -> RecordLayout(currentLayout, state.records, Modifier.align(Alignment.TopStart))
             }
         }

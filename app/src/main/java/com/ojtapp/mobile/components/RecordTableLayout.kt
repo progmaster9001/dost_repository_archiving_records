@@ -1,5 +1,9 @@
 package com.ojtapp.mobile.components
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -25,11 +29,14 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -42,6 +49,7 @@ import com.ojtapp.mobile.model.getFieldValue
 import com.ojtapp.mobile.model.giaFieldNames
 import com.ojtapp.mobile.screens.LocalRecordTab
 import com.ojtapp.mobile.model.setupFieldNames
+import kotlinx.coroutines.launch
 
 @Composable
 fun RecordTableLayout(
@@ -75,25 +83,54 @@ fun RecordTableLayout(
                 }
             }
 
-            itemsIndexed(records) { index, record ->
-                Card(
-                    shape = RectangleShape,
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onRecordClick(record) }
-                    ) {
-                        RarRecord(record, onClick = { onRecordClick(record) })
-                        if (index != records.lastIndex) {
-                            HorizontalDivider(
-                                thickness = 0.5.dp,
-                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+            itemsIndexed(records, key = {i, _ -> i}) { index, record ->
+                val scale = remember { Animatable(0.9f) }
+                val alpha = remember { Animatable(0f) }
+
+                LaunchedEffect(Unit) {
+                    launch {
+                        scale.animateTo(
+                            targetValue = 1f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioLowBouncy,
+                                stiffness = Spring.StiffnessLow
                             )
+                        )
+                    }
+                    launch {
+                        alpha.animateTo(
+                            targetValue = 1f,
+                            animationSpec = tween(durationMillis = 300)
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier.graphicsLayer {
+                        this.scaleX = scale.value
+                        this.scaleY = scale.value
+                        this.alpha = alpha.value
+                    }
+                ){
+                    Card(
+                        shape = RectangleShape,
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        modifier = Modifier.animateItem()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onRecordClick(record) }
+                        ) {
+                            RarRecord(record, onClick = { onRecordClick(record) })
+                            if (index != records.lastIndex) {
+                                HorizontalDivider(
+                                    thickness = 0.5.dp,
+                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                                )
+                            }
                         }
                     }
                 }

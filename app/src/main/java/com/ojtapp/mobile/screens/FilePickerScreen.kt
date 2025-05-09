@@ -1,10 +1,6 @@
 package com.ojtapp.mobile.screens
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -15,7 +11,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,6 +28,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ojtapp.mobile.R
 import com.ojtapp.mobile.components.FileItem
+import com.ojtapp.mobile.components.RarLoadingProgressIndicator
 import com.ojtapp.mobile.data.ServiceLocator
 import com.ojtapp.mobile.model.FileResponse
 import com.ojtapp.mobile.model.Resource
@@ -108,7 +104,7 @@ fun FilePickerScreen(
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
                 when(it){
                     is FilePickerState.Error -> Text(it.error, textAlign = TextAlign.Center)
-                    FilePickerState.Loading -> CircularProgressIndicator()
+                    FilePickerState.Loading -> RarLoadingProgressIndicator()
                     is FilePickerState.Success -> {
                         val files = it.response?.files ?: emptyList()
                         if(files.isEmpty()){
