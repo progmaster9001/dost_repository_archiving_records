@@ -39,11 +39,16 @@ class LoginViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage = _errorMessage.asStateFlow()
 
-    private val _switchMode = MutableStateFlow(ServiceLocator.currentRepositoryProvider.value.mode)
-    val switchMode = _switchMode.asStateFlow()
+    private val _switchMode = MutableStateFlow(serviceLocator.getUserPreference().repositoryMode)
+
+    val switchMode = _switchMode.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = RepositoryMode.REMOTE
+    )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val switchStatus = _switchMode.flatMapLatest { mode ->
+    val switchStatus = switchMode.flatMapLatest { mode ->
         serviceLocator.switchRepositoryProvider(mode)
     }.map { resource ->
         when (resource) {
@@ -83,6 +88,6 @@ class LoginViewModel(
     }
 
     fun switchRepositoryMode(mode: RepositoryMode) {
-        _switchMode.update{ mode }
+        _switchMode.update { mode }
     }
 }

@@ -12,7 +12,6 @@ import com.ojtapp.mobile.repositories.remote.RemoteRecordsRepository
 import com.ojtapp.mobile.repositories.remote.UserRepositoryImpl
 
 interface RepositoryProvider {
-    val mode: RepositoryMode
     val recordsRepository: RecordsRepository
     val userRepository: UserRepository
     val authRepository: AuthRepository
@@ -20,7 +19,6 @@ interface RepositoryProvider {
 }
 
 object RemoteOnlyProvider : RepositoryProvider {
-    override val mode = RepositoryMode.REMOTE
     override val recordsRepository by lazy {
         RemoteRecordsRepository(ServiceLocator.getApiService(), ServiceLocator.getSharedPreference())
     }
@@ -36,7 +34,6 @@ object RemoteOnlyProvider : RepositoryProvider {
 }
 
 object LocalOnlyProvider : RepositoryProvider {
-    override val mode = RepositoryMode.LOCAL
     override val recordsRepository by lazy {
         LocalRecordsRepository()
     }

@@ -36,35 +36,40 @@ object ServiceLocator {
 
     fun init(context: Context) {
         if (::sharedPreferences.isInitialized) return
-
         apiClient = RarApiClient()
         sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
         userPreference = UserPreference(sharedPreferences)
         apiService = apiClient.build
-        repositoryProvider = MutableStateFlow(RemoteOnlyProvider)
+        repositoryProvider = MutableStateFlow(when (userPreference.repositoryMode) {
+            RepositoryMode.REMOTE -> RemoteOnlyProvider
+            RepositoryMode.LOCAL -> LocalOnlyProvider
+        })
     }
 
     fun switchRepositoryProvider(mode: RepositoryMode): Flow<Resource<String>> = flow {
         checkInitialization()
-
-        if (repositoryProvider.value.mode == mode) {
+        if (userPreference.repositoryMode == mode) {
             emit(Resource.Success("Current Repositories: ${mode.name}"))
             return@flow
         }
 
         emit(Resource.Loading)
         delay(1500)
-
         try {
-            val provider = when (mode) {
-                RepositoryMode.REMOTE -> RemoteOnlyProvider
-                RepositoryMode.LOCAL -> LocalOnlyProvider
-            }
-            repositoryProvider.update { provider }
+            updateRepositoryProvider(mode)
+            userPreference.repositoryMode = mode
             emit(Resource.Success("Current Repositories: ${mode.name}"))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Unknown error occurred."))
         }
+    }
+
+    private fun updateRepositoryProvider(mode: RepositoryMode){
+        val provider = when (mode) {
+            RepositoryMode.REMOTE -> RemoteOnlyProvider
+            RepositoryMode.LOCAL -> LocalOnlyProvider
+        }
+        repositoryProvider.update { provider }
     }
 
     fun getSharedPreference(): SharedPreferences {

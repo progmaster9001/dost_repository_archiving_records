@@ -185,36 +185,31 @@ private fun MainScreen(
                 )
             }
         }
-
-        Box(
-            modifier = Modifier.padding(horizontal = 16.dp)
+        Column(
+            modifier = Modifier.padding(innerPadding).fillMaxWidth()
         ) {
-            Column(
-                modifier = Modifier.padding(innerPadding).fillMaxWidth()
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    val records = when(recordsState){
-                        is RecordState.Error -> emptyList()
-                        RecordState.Loading -> emptyList()
-                        is RecordState.Success -> recordsState.records
-                    }
-                    Text(
-                        "Records Found: ${records.size}",
-                        modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                    LayoutSwitch(
-                        firstText = "Table",
-                        secondText = "Card",
-                        isTableLayout = currentLayout == Layout.TABLE,
-                        setLayout = setLayout,
-                    )
+                val records = when(recordsState){
+                    is RecordState.Error -> emptyList()
+                    RecordState.Loading -> emptyList()
+                    is RecordState.Success -> recordsState.records
                 }
-                RecordsContainer(currentLayout = currentLayout, recordsState = recordsState)
+                Text(
+                    "Records Found: ${records.size}",
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.labelMedium
+                )
+                LayoutSwitch(
+                    firstText = "Table",
+                    secondText = "Card",
+                    isTableLayout = currentLayout == Layout.TABLE,
+                    setLayout = setLayout,
+                )
             }
+            RecordsContainer(currentLayout = currentLayout, recordsState = recordsState)
         }
     }
 }

@@ -7,6 +7,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,11 +60,12 @@ fun RecordTableLayout(
     modifier: Modifier = Modifier,
     onRecordClick: (Record) -> Unit = {}
 ) {
+
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 8.dp),
+            .horizontalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if(records.isEmpty()){
@@ -111,24 +115,17 @@ fun RecordTableLayout(
                         this.alpha = alpha.value
                     }
                 ){
-                    Card(
-                        shape = RectangleShape,
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    Box(
                         modifier = Modifier.animateItem()
                     ) {
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onRecordClick(record) }
+                            modifier = Modifier.fillMaxWidth().clickable {  }
                         ) {
-                            RarRecord(record, onClick = { onRecordClick(record) })
+                            RarRecord(record, onClick = {})
                             if (index != records.lastIndex) {
                                 HorizontalDivider(
                                     thickness = 0.5.dp,
-                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)
                                 )
                             }
                         }
@@ -149,7 +146,6 @@ fun RecordHeader(
 
     Row(
         modifier = modifier
-            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
             .fillMaxWidth()
             .height(48.dp)
             .padding(horizontal = 16.dp),
@@ -160,7 +156,6 @@ fun RecordHeader(
                 value = column,
                 index = index,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
                 isHeader = true
             )
         }
@@ -170,8 +165,8 @@ fun RecordHeader(
 @Composable
 fun RarRecord(
     record: Record,
+    onClick: (String?) -> Unit,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit
 ) {
     val fieldValues = getFieldValues(record) ?: emptyList()
 
@@ -179,8 +174,8 @@ fun RarRecord(
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 32.dp)
+        ,
         verticalAlignment = Alignment.CenterVertically
     ) {
         fieldValues.forEachIndexed { index, value ->

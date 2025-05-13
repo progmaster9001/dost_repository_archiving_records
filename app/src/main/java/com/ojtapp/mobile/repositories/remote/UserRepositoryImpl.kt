@@ -1,9 +1,9 @@
 package com.ojtapp.mobile.repositories.remote
 
-import android.util.Log
-import com.ojtapp.mobile.repositories.UserRepository
+import com.ojtapp.mobile.data.RepositoryMode
 import com.ojtapp.mobile.model.User
 import com.ojtapp.mobile.model.UserPreference
+import com.ojtapp.mobile.repositories.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -21,7 +21,6 @@ class UserRepositoryImpl(
     }
 
     override fun updateUser(newUser: User) {
-        Log.d("UserRep", newUser.token)
         _user.update { newUser }
         userPreference.user = newUser
     }
