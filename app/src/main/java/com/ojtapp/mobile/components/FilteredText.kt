@@ -42,156 +42,141 @@ fun FilteredTextContent(
     resetFilter: () -> Unit
 ) {
     if(currentTab == Type.GIA && !giaFilterState.isEmpty() || currentTab == Type.SETUP && !setupFilterState.isEmpty()){
-        Column {
-            Row(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp, horizontal = Dimensions.horizontalPadding)
-                    .background(MaterialTheme.colorScheme.surfaceBright)
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+                .padding(horizontal = Dimensions.horizontalPadding)
+                .background(MaterialTheme.colorScheme.surfaceBright)
+        ) {
+            CompositionLocalProvider(
+                LocalTextStyle provides MaterialTheme.typography.labelSmall.copy(
+                    textAlign = TextAlign.Right
+                )
             ) {
-                CompositionLocalProvider(
-                    LocalTextStyle provides MaterialTheme.typography.labelSmall.copy(
-                        textAlign = TextAlign.Right
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                    ){
-                        when(currentTab){
-                            Type.GIA -> {
-                                if(
-                                    giaFilterState.projectTitleContains != null ||
-                                    giaFilterState.locationContains != null ||
-                                    giaFilterState.classContains != null ||
-                                    giaFilterState.beneficiaryContains != null ||
-                                    giaFilterState.remarksContains != null ||
-                                    giaFilterState.minProjectCost != null ||
-                                    giaFilterState.maxProjectCost != null ||
-                                    giaFilterState.classesIn != null
-                                ) {
-                                    giaFilterState.projectTitleContains?.let {
-                                        SingleFilterText(
-                                            name = "Project Title",
-                                            text = it
-                                        )
-                                    }
-                                    giaFilterState.locationContains?.let {
-                                        SingleFilterText(
-                                            name = "Location",
-                                            text = it
-                                        )
-                                    }
-                                    giaFilterState.remarksContains?.let {
-                                        SingleFilterText(
-                                            name = "Remarks",
-                                            text = it
-                                        )
-                                    }
-                                    giaFilterState.classContains?.let {
-                                        SingleFilterText(
-                                            name = "Class",
-                                            text = it
-                                        )
-                                    }
-                                    giaFilterState.beneficiaryContains?.let {
-                                        SingleFilterText(
-                                            name = "Beneficiary",
-                                            text = it
-                                        )
-                                    }
-                                    giaFilterState.minProjectCost?.let {
-                                        SingleFilterText(
-                                            name = "Min Project Cost",
-                                            text = it.toString()
-                                        )
-                                    }
-                                    giaFilterState.maxProjectCost?.let {
-                                        SingleFilterText(
-                                            name = "Max Project Cost",
-                                            text = it.toString()
-                                        )
-                                    }
-                                    giaFilterState.classesIn?.let {
-                                        MultiFilterText(
-                                            name = "Selected Classes",
-                                            values = it
-                                        )
-                                    }
+                Column(
+                    modifier = Modifier.weight(1f),
+                ){
+                    when(currentTab){
+                        Type.GIA -> {
+                            if(
+                                giaFilterState.projectTitleContains != null ||
+                                giaFilterState.locationContains != null ||
+                                giaFilterState.classContains != null ||
+                                giaFilterState.beneficiaryContains != null ||
+                                giaFilterState.remarksContains != null ||
+                                giaFilterState.minProjectCost != null ||
+                                giaFilterState.maxProjectCost != null ||
+                                giaFilterState.classesIn != null
+                            ) {
+                                giaFilterState.projectTitleContains?.let {
+                                    SingleFilterText(
+                                        name = "Project Title",
+                                        text = it
+                                    )
+                                }
+                                giaFilterState.locationContains?.let {
+                                    SingleFilterText(
+                                        name = "Location",
+                                        text = it
+                                    )
+                                }
+                                giaFilterState.remarksContains?.let {
+                                    SingleFilterText(
+                                        name = "Remarks",
+                                        text = it
+                                    )
+                                }
+                                giaFilterState.classContains?.let {
+                                    SingleFilterText(
+                                        name = "Class",
+                                        text = it
+                                    )
+                                }
+                                giaFilterState.beneficiaryContains?.let {
+                                    SingleFilterText(
+                                        name = "Beneficiary",
+                                        text = it
+                                    )
+                                }
+                                giaFilterState.minProjectCost?.let {
+                                    SingleFilterText(
+                                        name = "Min Project Cost",
+                                        text = it.toString()
+                                    )
+                                }
+                                giaFilterState.maxProjectCost?.let {
+                                    SingleFilterText(
+                                        name = "Max Project Cost",
+                                        text = it.toString()
+                                    )
+                                }
+                                giaFilterState.classesIn?.let {
+                                    MultiFilterText(
+                                        name = "Selected Classes",
+                                        values = it
+                                    )
                                 }
                             }
-                            Type.SETUP -> {
-                                if(
-                                    setupFilterState.statusIn != null ||
-                                    setupFilterState.sectorIn != null ||
-                                    setupFilterState.sectorContains != null ||
-                                    setupFilterState.firmNameContains != null ||
-                                    setupFilterState.proponentContains != null ||
-                                    setupFilterState.minYearApproved != null ||
-                                    setupFilterState.maxYearApproved != null ||
-                                    setupFilterState.minAmountApproved != null ||
-                                    setupFilterState.maxAmountApproved != null
-                                )
-                                {
-                                    setupFilterState.sectorIn?.let {
-                                        MultiFilterText(
-                                            name = "Selected Sectors",
-                                            values = it
-                                        )
-                                    }
-                                    setupFilterState.statusIn?.let {
-                                        MultiFilterText(
-                                            name = "Selected Statuses",
-                                            values = it
-                                        )
-                                    }
-                                    setupFilterState.proponentContains?.let {
-                                        SingleFilterText(
-                                            name = "Proponent",
-                                            text = it
-                                        )
-                                    }
-                                    setupFilterState.firmNameContains?.let {
-                                        SingleFilterText(
-                                            name = "Firm Name",
-                                            text = it
-                                        )
-                                    }
-                                    setupFilterState.minYearApproved?.let {
-                                        SingleFilterText(
-                                            name = "Min Year Approved",
-                                            text = it.toString()
-                                        )
-                                    }
-                                    setupFilterState.maxYearApproved?.let {
-                                        SingleFilterText(
-                                            name = "Max Year Approved",
-                                            text = it.toString()
-                                        )
-                                    }
-                                    setupFilterState.minAmountApproved?.let {
-                                        SingleFilterText(
-                                            name = "Min Amount Approved",
-                                            text = it.toString()
-                                        )
-                                    }
-                                    setupFilterState.maxAmountApproved?.let {
-                                        SingleFilterText(
-                                            name = "Max Amount Approved",
-                                            text = it.toString()
-                                        )
-                                    }
+                        }
+                        Type.SETUP -> {
+                            if(
+                                setupFilterState.statusIn != null ||
+                                setupFilterState.sectorIn != null ||
+                                setupFilterState.sectorContains != null ||
+                                setupFilterState.firmNameContains != null ||
+                                setupFilterState.proponentContains != null ||
+                                setupFilterState.minAmountApproved != null ||
+                                setupFilterState.maxAmountApproved != null
+                            )
+                            {
+                                setupFilterState.sectorIn?.let {
+                                    MultiFilterText(
+                                        name = "Selected Sectors",
+                                        values = it
+                                    )
+                                }
+                                setupFilterState.statusIn?.let {
+                                    MultiFilterText(
+                                        name = "Selected Statuses",
+                                        values = it
+                                    )
+                                }
+                                setupFilterState.proponentContains?.let {
+                                    SingleFilterText(
+                                        name = "Proponent",
+                                        text = it
+                                    )
+                                }
+                                setupFilterState.firmNameContains?.let {
+                                    SingleFilterText(
+                                        name = "Firm Name",
+                                        text = it
+                                    )
+                                }
+                                setupFilterState.minAmountApproved?.let {
+                                    SingleFilterText(
+                                        name = "Min Amount Approved",
+                                        text = it.toString()
+                                    )
+                                }
+                                setupFilterState.maxAmountApproved?.let {
+                                    SingleFilterText(
+                                        name = "Max Amount Approved",
+                                        text = it.toString()
+                                    )
                                 }
                             }
                         }
                     }
                 }
-                Spacer(modifier = Modifier.width(Dimensions.basicSpacing))
-                Icon(
-                    imageVector = Icons.Default.Clear,
-                    contentDescription = "reset_filter_icon",
-                    modifier = Modifier.size(28.dp).padding(4.dp).clip(CircleShape).clickable(onClick = resetFilter).align(Alignment.Top)
-                )
             }
+            Spacer(modifier = Modifier.width(Dimensions.basicSpacing))
+            Icon(
+                imageVector = Icons.Default.Clear,
+                contentDescription = "reset_filter_icon",
+                modifier = Modifier.size(28.dp).padding(4.dp).clip(CircleShape).clickable(onClick = resetFilter).align(Alignment.Top)
+            )
         }
     }
 }

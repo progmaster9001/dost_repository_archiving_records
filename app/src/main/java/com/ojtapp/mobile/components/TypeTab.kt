@@ -80,7 +80,7 @@ fun TypeTabRow(
                 modifier = modifier
                     .height(38.dp)
                     .width(50.dp)
-                    .clickable(onClick = onFileClick),
+                    .clickable(onClick = onFileClick ),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
@@ -130,7 +130,14 @@ fun TypeTab(
                 minHeight = 38.dp,
                 minWidth = 90.dp
             )
-            .background(if (selected) Color(133, 224, 224, 255) else MaterialTheme.colorScheme.inverseSurface)
+            .background(
+                if (selected) Color(
+                    133,
+                    224,
+                    224,
+                    255
+                ) else MaterialTheme.colorScheme.inverseSurface
+            )
             .clickable(onClick = onSelectedTab)
             .padding(horizontal = 12.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center

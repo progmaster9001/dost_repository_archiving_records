@@ -286,14 +286,11 @@ fun SetupFilterContent(
     var proponentContains by remember { mutableStateOf(setupFilterState.proponentContains ?: "") }
     var firmNameContains by remember { mutableStateOf(setupFilterState.firmNameContains ?: "") }
 
-    var minYearApproved by remember { mutableStateOf(setupFilterState.minYearApproved?.toString() ?: "") }
-    var maxYearApproved by remember { mutableStateOf(setupFilterState.maxYearApproved?.toString() ?: "") }
-
     var minAmountApproved by remember { mutableStateOf(setupFilterState.minAmountApproved?.toString() ?: "") }
     var maxAmountApproved by remember { mutableStateOf(setupFilterState.maxAmountApproved?.toString() ?: "") }
 
-    val areFieldsNotEmpty = atLeastOneNotEmpty(selectedSectors, selectedStatuses, proponentContains, firmNameContains, minYearApproved, maxYearApproved, minAmountApproved, maxAmountApproved)
-    val isSame = setupFilterState.isSame(selectedSectors, selectedStatuses, proponentContains, firmNameContains, minYearApproved, maxYearApproved, minAmountApproved, maxAmountApproved)
+    val areFieldsNotEmpty = atLeastOneNotEmpty(selectedSectors, selectedStatuses, proponentContains, firmNameContains, minAmountApproved, maxAmountApproved)
+    val isSame = setupFilterState.isSame(selectedSectors, selectedStatuses, proponentContains, firmNameContains, minAmountApproved, maxAmountApproved)
     val activateReset = areFieldsNotEmpty && isSame
 
     val buttonColors = when(activateReset){
@@ -361,24 +358,6 @@ fun SetupFilterContent(
 
         Row {
             OutlinedTextField(
-                value = minYearApproved,
-                onValueChange = { minYearApproved = it },
-                label = { Text("Min Year Approved", maxLines = 1) },
-                singleLine = true,
-                modifier = Modifier.weight(1f)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            OutlinedTextField(
-                value = maxYearApproved,
-                onValueChange = { maxYearApproved = it },
-                label = { Text("Max Year Approved", maxLines = 1) },
-                singleLine = true,
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        Row {
-            OutlinedTextField(
                 value = minAmountApproved,
                 onValueChange = { minAmountApproved = it },
                 label = { Text("Min Amount Approved", maxLines = 1) },
@@ -403,8 +382,6 @@ fun SetupFilterContent(
                     selectedStatuses = emptyList()
                     proponentContains = ""
                     firmNameContains = ""
-                    minYearApproved = ""
-                    maxYearApproved = ""
                     minAmountApproved = ""
                     maxAmountApproved = ""
                 }else{
@@ -414,8 +391,6 @@ fun SetupFilterContent(
                             statusIn = selectedStatuses.ifEmpty { null },
                             proponentContains = proponentContains.ifBlank { null },
                             firmNameContains = firmNameContains.ifBlank { null },
-                            minYearApproved = minYearApproved.toIntOrNull(),
-                            maxYearApproved = maxYearApproved.toIntOrNull(),
                             minAmountApproved = minAmountApproved.toDoubleOrNull(),
                             maxAmountApproved = maxAmountApproved.toDoubleOrNull()
                         )

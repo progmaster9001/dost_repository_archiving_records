@@ -36,7 +36,7 @@ fun RarNavigationHost(modifier: Modifier = Modifier) {
             navigation<MainGraph>(
                 startDestination = Home
             ){
-                homeScreen(onLogout = navController::navigateToLogin, onFileClick = navController::navigateToFilePickerGraph)
+                homeScreen(onLogout = navController::navigateToLogin, onRecordClick = navController::navigateToFilePickerScreen, onFileClick = navController::navigateToFilePickerGraph)
                 filePickerGraph(fileClick = navController::navigateToFilePickerScreen, back = navController::popBackStack)
             }
         }

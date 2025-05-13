@@ -1,5 +1,6 @@
 package com.ojtapp.mobile.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ojtapp.mobile.components.util.FilterCriteria
@@ -15,6 +16,7 @@ import com.ojtapp.mobile.repositories.UserRepository
 import com.ojtapp.mobile.components.util.filterRecords
 import com.ojtapp.mobile.data.ServiceLocator
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -68,11 +70,17 @@ class MainViewModel(
     private val _currentTab = MutableStateFlow(Type.GIA)
     val currentTab = _currentTab.asStateFlow()
 
+    private val _selectedRecord = MutableStateFlow<Pair<String, String>?>(null)
+    val selectedRecord = _selectedRecord.asStateFlow()
+
     private val _currentLayout = MutableStateFlow(Layout.TABLE)
     val currentLayout = _currentLayout.asStateFlow()
 
     private val _dialogState = MutableStateFlow(DialogState.CLOSED)
     val dialogState = _dialogState.asStateFlow()
+
+    private val _selectedYear = MutableStateFlow<Int?>(null)
+    val selectedYear = _selectedYear.asStateFlow()
 
     private val _giaRecordFilter = MutableStateFlow(GiaRecordFilterCriteria())
     val giaRecordFilter = _giaRecordFilter.asStateFlow()
@@ -100,8 +108,13 @@ class MainViewModel(
             initialValue = RecordState.Loading
         )
 
-    val filteredRecords = combine(records, _setupRecordFilter, _giaRecordFilter){ state, setup, gia ->
-        filterRecords(state, gia, setup)
+
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val filteredRecords = _selectedYear.flatMapLatest { selectedYaer ->
+        combine(records, _setupRecordFilter, _giaRecordFilter){ state, setup, gia ->
+            filterRecords(state, gia, setup.copy(selectedYear = selectedYaer))
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Lazily,
@@ -132,5 +145,13 @@ class MainViewModel(
             is FilterEvent.ApplyFilter -> if(_currentTab.value == Type.GIA) _giaRecordFilter.update { event.criteria as GiaRecordFilterCriteria } else _setupRecordFilter.update { event.criteria as SetupRecordFilterCriteria }
             FilterEvent.ResetFilter -> if(_currentTab.value == Type.GIA) _giaRecordFilter.update { GiaRecordFilterCriteria() } else _setupRecordFilter.update { SetupRecordFilterCriteria() }
         }
+    }
+
+    fun updateRecord(recordPair: Pair<String, String>?){
+        _selectedRecord.update { recordPair }
+    }
+
+    fun updateYear(year: Int?){
+        _selectedYear.update { year }
     }
 }

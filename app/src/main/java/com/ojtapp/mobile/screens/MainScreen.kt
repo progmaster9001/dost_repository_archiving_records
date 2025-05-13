@@ -5,8 +5,6 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,7 +23,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -51,10 +48,10 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ojtapp.mobile.R
 import com.ojtapp.mobile.components.Dimensions
@@ -62,11 +59,14 @@ import com.ojtapp.mobile.components.FilterContent
 import com.ojtapp.mobile.components.FilterSheet
 import com.ojtapp.mobile.components.FilteredTextContent
 import com.ojtapp.mobile.components.LayoutSwitch
+import com.ojtapp.mobile.components.RarDrawer
 import com.ojtapp.mobile.components.RarLoadingProgressIndicator
 import com.ojtapp.mobile.components.RecordCardLayout
 import com.ojtapp.mobile.components.RecordTableLayout
+import com.ojtapp.mobile.components.SelectedRecordDialog
 import com.ojtapp.mobile.components.TypeTabRow
 import com.ojtapp.mobile.components.WarningDialog
+import com.ojtapp.mobile.components.YearDropdownMenu
 import com.ojtapp.mobile.components.util.GiaRecordFilterCriteria
 import com.ojtapp.mobile.components.util.SetupRecordFilterCriteria
 import com.ojtapp.mobile.components.util.countFilters
@@ -84,6 +84,7 @@ import com.ojtapp.mobile.viewmodels.RecordState
 fun MainRoute(
     viewModel: MainViewModel,
     logout: () -> Unit,
+    onRecordClick: (String) -> Unit,
     onFileClick: () -> Unit
 ) {
 
@@ -94,6 +95,24 @@ fun MainRoute(
     val giaRecordFilterState by viewModel.giaRecordFilter.collectAsStateWithLifecycle()
     val setupRecordFilterState by viewModel.setupRecordFilter.collectAsStateWithLifecycle()
     val dialogState by viewModel.dialogState.collectAsStateWithLifecycle()
+    val selectedYear by viewModel.selectedYear.collectAsStateWithLifecycle()
+    val selectedRecord by viewModel.selectedRecord.collectAsStateWithLifecycle()
+    var doesRecordExist by remember { mutableStateOf(false) }
+
+    if(doesRecordExist){
+        SelectedRecordDialog(
+            title = selectedRecord?.first ?: "",
+            onDismissRequest = {
+                doesRecordExist = false
+                viewModel.updateRecord(it)
+            },
+            onClick = {
+                doesRecordExist = false
+                onRecordClick(selectedRecord?.second ?: "")
+                viewModel.updateRecord(null)
+            }
+        )
+    }
 
     if(dialogState == DialogState.OPENED)
         WarningDialog(onDismissRequest = { viewModel.toggleDialog(DialogEvent.CloseDialog) },
@@ -106,6 +125,7 @@ fun MainRoute(
 
     MainScreen(
         currentTab = currentTab,
+        selectedYear = selectedYear,
         currentLayout = currentLayout,
         user = user,
         giaFilterState = giaRecordFilterState,
@@ -114,7 +134,12 @@ fun MainRoute(
         recordsState = recordsState,
         toggleDialog = viewModel::toggleDialog,
         setLayout = viewModel::setCurrentLayout,
+        onRecordClick = {
+            doesRecordExist = true
+            viewModel.updateRecord(it)
+        },
         onFileClick = onFileClick,
+        selectYear = viewModel::updateYear,
         onSelectedTab = viewModel::setCurrentTab,
     )
 }
@@ -126,6 +151,7 @@ val LocalRecordTab = staticCompositionLocalOf { Type.GIA }
 private fun MainScreen(
     modifier: Modifier = Modifier,
     currentTab: Type,
+    selectedYear: Int?,
     currentLayout: Layout,
     user: User,
     giaFilterState: GiaRecordFilterCriteria,
@@ -134,7 +160,9 @@ private fun MainScreen(
     recordsState: RecordState,
     toggleDialog: (DialogEvent) -> Unit,
     setLayout: () -> Unit,
+    onRecordClick: (Pair<String, String>?) -> Unit,
     onFileClick: () -> Unit,
+    selectYear: (Int?) -> Unit,
     onSelectedTab: (Type) -> Unit
 ) {
 
@@ -148,10 +176,12 @@ private fun MainScreen(
             AppHeader(
                 user = user,
                 currentTab = currentTab,
+                currentLayout = currentLayout,
                 giaFilterState = giaFilterState,
                 setupFilterState = setupFilterState,
-                resetFilter = { filterEvent(FilterEvent.ResetFilter) },
                 toggleDialog = toggleDialog,
+                setLayout = setLayout,
+                resetFilter = { filterEvent(FilterEvent.ResetFilter) }
             )
         },
         floatingActionButton = {
@@ -189,7 +219,7 @@ private fun MainScreen(
             modifier = Modifier.padding(innerPadding).fillMaxWidth()
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 4.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp).padding(bottom = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 val records = when(recordsState){
@@ -197,11 +227,16 @@ private fun MainScreen(
                     RecordState.Loading -> emptyList()
                     is RecordState.Success -> recordsState.records
                 }
+                YearDropdownMenu(
+                    modifier = Modifier.weight(1f),
+                    selectedYear = selectedYear,
+                    onYearSelected = selectYear
+                )
                 Text(
                     "Records Found: ${records.size}",
-                    modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.labelMedium
                 )
+                Spacer(Modifier.width(16.dp))
                 LayoutSwitch(
                     firstText = "Table",
                     secondText = "Card",
@@ -209,7 +244,7 @@ private fun MainScreen(
                     setLayout = setLayout,
                 )
             }
-            RecordsContainer(currentLayout = currentLayout, recordsState = recordsState)
+            RecordsContainer(currentLayout = currentLayout, recordsState = recordsState, onRecordClick = onRecordClick)
         }
     }
 }
@@ -218,21 +253,15 @@ private fun MainScreen(
 fun AppHeader(
     modifier: Modifier = Modifier,
     user: User,
+    currentLayout: Layout,
     currentTab: Type,
     giaFilterState: GiaRecordFilterCriteria,
     setupFilterState: SetupRecordFilterCriteria,
-    resetFilter: () -> Unit,
-    toggleDialog: (DialogEvent) -> Unit) {
-//    Box(
-//        modifier = Modifier
-//            .shadowWithClipIntersect(
-//                elevation = 4.dp,
-//                shape = RectangleShape
-//            )
-//            .background(MaterialTheme.colorScheme.surfaceBright)
-//    ){
-//
-//    }
+    setLayout: () -> Unit,
+    toggleDialog: (DialogEvent) -> Unit,
+    resetFilter: () -> Unit
+) {
+
     Box(modifier = Modifier.background(MaterialTheme.colorScheme.surfaceBright)){
         Column(
             modifier = Modifier
@@ -263,14 +292,10 @@ fun AppHeader(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
                 )
-                Text(
-                    text = "Leave",
-                    modifier = Modifier.clickable(
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                        onClick = { toggleDialog(DialogEvent.OpenDialog) }
-                    ),
-                    color = MaterialTheme.colorScheme.error
+                RarDrawer(
+                    currentLayout = currentLayout,
+                    setLayout = setLayout,
+                    toggleDialog = toggleDialog
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -287,16 +312,32 @@ fun AppHeader(
 @Composable
 fun RecordsContainer(
     currentLayout: Layout,
-    recordsState: RecordState
+    recordsState: RecordState,
+    onRecordClick: (Pair<String, String>?) -> Unit
 ) {
     AnimatedContent(
         targetState = recordsState,
     ) { state ->
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
             when (state) {
-                is RecordState.Error -> Text(text = state.error, textAlign = TextAlign.Center)
+                is RecordState.Error -> {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(painter = painterResource(R.drawable.error_data), contentDescription = "error_data")
+                        Spacer(Modifier.height(2.dp))
+                        Text(state.error, fontSize = 16.sp)
+                    }
+                }
                 RecordState.Loading -> RarLoadingProgressIndicator()
-                is RecordState.Success -> RecordLayout(currentLayout, state.records, Modifier.align(Alignment.TopStart))
+                is RecordState.Success -> {
+                    if(state.records.isEmpty()) {
+                        Image(painter = painterResource(R.drawable.no_data), contentDescription = "no_data")
+                    } else{
+                        RecordLayout(currentLayout, state.records, Modifier.align(Alignment.TopStart),  onRecordClick = onRecordClick)
+                    }
+                }
             }
         }
     }
@@ -306,12 +347,13 @@ fun RecordsContainer(
 fun RecordLayout(
     currentLayout: Layout,
     records: List<Record>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRecordClick: (Pair<String, String>?) -> Unit
 ) {
     AnimatedContent(modifier = modifier, targetState = currentLayout) { layout ->
         when(layout){
             Layout.CARD -> RecordCardLayout(records)
-            Layout.TABLE -> RecordTableLayout(records)
+            Layout.TABLE -> RecordTableLayout(records, onRecordClick = onRecordClick)
         }
     }
 }

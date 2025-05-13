@@ -34,10 +34,9 @@ interface FilterCriteria
 data class SetupRecordFilterCriteria(
     val firmNameContains: String? = null,
     val proponentContains: String? = null,
+    val selectedYear: Int? = null,
     val minAmountApproved: Double? = null,
     val maxAmountApproved: Double? = null,
-    val minYearApproved: Int? = null,
-    val maxYearApproved: Int? = null,
     val locationContains: String? = null,
     val districtContains: String? = null,
     val statusContains: String? = null,
@@ -100,12 +99,8 @@ fun buildSetupRecordFilter(criteria: SetupRecordFilterCriteria): (SetupRecord) -
         builder.withMax({ it.amountApproved ?: 0.0 }, max)
     }
 
-    criteria.minYearApproved?.let { min ->
-        builder.withMin({ it.yearApproved ?: Int.MIN_VALUE }, min)
-    }
-
-    criteria.maxYearApproved?.let { max ->
-        builder.withMax({ it.yearApproved ?: Int.MAX_VALUE }, max)
+    criteria.selectedYear?.let { year ->
+        builder.with { it.yearApproved == year }
     }
 
     return builder.build()
@@ -197,8 +192,7 @@ fun countFilters(
             setupCriteria.proponentContains,
             setupCriteria.minAmountApproved,
             setupCriteria.maxAmountApproved,
-            setupCriteria.minYearApproved,
-            setupCriteria.maxYearApproved,
+            setupCriteria.selectedYear,
             setupCriteria.locationContains,
             setupCriteria.districtContains,
             setupCriteria.statusContains,
@@ -237,8 +231,6 @@ fun SetupRecordFilterCriteria.isSame(
     selectedStatuses: List<String>,
     proponentContains: String,
     firmNameContains: String,
-    minYearApprovedStr: String,
-    maxYearApprovedStr: String,
     minAmountApprovedStr: String,
     maxAmountApprovedStr: String
 ): Boolean {
@@ -246,10 +238,8 @@ fun SetupRecordFilterCriteria.isSame(
             (this.statusIn.orEmpty() == selectedStatuses) &&
             this.proponentContains.orEmpty() == proponentContains &&
             this.firmNameContains.orEmpty() == firmNameContains &&
-            (this.minYearApproved?.toString().orEmpty()) == minYearApprovedStr &&
-            (this.maxYearApproved?.toString().orEmpty()) == maxYearApprovedStr &&
-            (this.minAmountApproved?.toString().orEmpty()) == minAmountApprovedStr &&
-            (this.maxAmountApproved?.toString().orEmpty()) == maxAmountApprovedStr
+            (this.minAmountApproved?.toString().orEmpty() == minAmountApprovedStr) &&
+            (this.maxAmountApproved?.toString().orEmpty() == maxAmountApprovedStr)
 }
 
 fun GiaRecordFilterCriteria.isEmpty(): Boolean {
@@ -266,10 +256,9 @@ fun GiaRecordFilterCriteria.isEmpty(): Boolean {
 fun SetupRecordFilterCriteria.isEmpty(): Boolean {
     return firmNameContains == null &&
             proponentContains == null &&
+            selectedYear == null &&
             minAmountApproved == null &&
             maxAmountApproved == null &&
-            minYearApproved == null &&
-            maxYearApproved == null &&
             locationContains == null &&
             districtContains == null &&
             statusContains == null &&

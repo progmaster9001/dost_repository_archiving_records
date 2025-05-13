@@ -51,15 +51,6 @@ fun RecordCardLayout(
     modifier: Modifier = Modifier
 ) {
 
-    val bounceSpec = spring<Float>(
-        dampingRatio = Spring.DampingRatioLowBouncy,
-        stiffness = Spring.StiffnessLow
-    )
-
-    val exitFadeSpec = tween<Float>(
-        durationMillis = 300
-    )
-
     LazyColumn(
         modifier = modifier
             .fillMaxWidth()
@@ -67,7 +58,6 @@ fun RecordCardLayout(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        item { Spacer(Modifier.height(4.dp)) }
 
         if (records.isEmpty()) {
             item {
@@ -86,7 +76,6 @@ fun RecordCardLayout(
                         ?: record.hashCode()
                 }
             ) { record ->
-                // Scale and alpha animatables
                 val scale = remember { Animatable(0.7f) }
                 val alpha = remember { Animatable(0f) }
 

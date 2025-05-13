@@ -24,6 +24,7 @@ fun NavController.navigateToHomeScreen(){
 
 fun NavGraphBuilder.homeScreen(
     onLogout: () -> Unit,
+    onRecordClick: (String) -> Unit,
     onFileClick: () -> Unit
 ){
     composable<Home> {
@@ -31,6 +32,7 @@ fun NavGraphBuilder.homeScreen(
         MainRoute(
             viewModel = viewModel,
             logout = onLogout,
+            onRecordClick = onRecordClick,
             onFileClick = onFileClick
         )
     }

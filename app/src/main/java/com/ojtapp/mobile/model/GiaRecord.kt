@@ -1,6 +1,5 @@
 package com.ojtapp.mobile.model
 
-import java.util.UUID
 import kotlin.reflect.full.primaryConstructor
 
 data class GiaRecord(

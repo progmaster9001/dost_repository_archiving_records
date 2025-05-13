@@ -86,7 +86,6 @@ class RemoteRecordsRepository(
             if (response.isSuccessful) {
                 val records = response.body()?.map { it as Record } ?: emptyList()
                 emit(Resource.Success(records))
-
                 setupRecordsFlow.value = records as List<SetupRecord>
             } else {
                 emit(Resource.Error("Failed to fetch setup_records: ${response.message()}"))
@@ -94,5 +93,6 @@ class RemoteRecordsRepository(
         } catch (e: Exception) {
             emit(Resource.Error("Unexpected error: ${e.localizedMessage}"))
         }
+
     }
 }
