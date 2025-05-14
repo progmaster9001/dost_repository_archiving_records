@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -372,19 +373,6 @@ fun RecordsContainer(
                     } else{
                         VerticalPager(
                             state = pagerState,
-                            pageSize = object : PageSize {
-                                override fun Density.calculateMainAxisPageSize(
-                                    availableSpace: Int,
-                                    pageSpacing: Int
-                                ): Int {
-                                    return (availableSpace - 2 * pageSpacing) / 2
-                                }
-                            },
-                            pageNestedScrollConnection = if (pagerState.currentPage == 1) {
-                                object : NestedScrollConnection {}
-                            } else {
-                                PagerDefaults.pageNestedScrollConnection(state = pagerState, orientation = Orientation.Vertical)
-                            },
                             modifier = Modifier.fillMaxSize()
                         ) { page ->
                             when (page) {
@@ -395,12 +383,14 @@ fun RecordsContainer(
                                         else -> ""
                                     }
                                     Column(
-                                        modifier = Modifier.align(Alignment.Center),
+                                        modifier = Modifier.fillMaxSize(),
+                                        verticalArrangement = Arrangement.Center,
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
                                         Text(title, textAlign = TextAlign.Center,
                                             fontWeight = FontWeight.Bold,
-                                            style = MaterialTheme.typography.titleLarge
+                                            style = MaterialTheme.typography.titleLarge,
+                                            modifier = Modifier.padding(horizontal = 16.dp)
                                         )
                                         Spacer(modifier = Modifier.height(16.dp))
                                         RarPieChart(
@@ -478,7 +468,7 @@ fun RarPieChart(modifier: Modifier = Modifier, records: List<Record>) {
     }
 
     PieChart(
-        modifier = modifier.size(278.dp),
+        modifier = modifier.height(324.dp).fillMaxWidth(),
         pieChartData = data,
         ratioLineColor = Color.LightGray,
         legendPosition = LegendPosition.BOTTOM,
