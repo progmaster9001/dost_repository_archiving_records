@@ -10,20 +10,44 @@ import androidx.compose.material3.RippleConfiguration
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.ojtapp.mobile.data.ServiceLocator
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.serialization.Serializable
 
 @Serializable
 object MainGraph
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun RarNavigationHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
+
+    val hasToken = ServiceLocator.currentRepositoryProvider
+        .flatMapLatest { provider ->
+            provider.userRepository.user
+        }
+        .map { user -> user.token.isNotEmpty() }.collectAsStateWithLifecycle(initialValue = false)
+
+    LaunchedEffect(hasToken.value) {
+        if(hasToken.value){
+            navController.navigateToHomeScreen()
+        }
+    }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp)
     ) { innerPadding ->

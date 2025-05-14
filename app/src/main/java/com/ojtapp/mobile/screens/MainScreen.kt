@@ -5,6 +5,8 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +25,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -48,6 +51,8 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -325,15 +330,20 @@ fun RecordsContainer(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Image(painter = painterResource(R.drawable.error_data), contentDescription = "error_data")
-                        Spacer(Modifier.height(2.dp))
-                        Text(state.error, fontSize = 16.sp)
+                        Image(painter = painterResource(R.drawable.error_data), contentDescription = "error_data", Modifier.size(164.dp))
+                        Text(state.error, maxLines = 2, overflow = TextOverflow.Clip, textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineMedium)
                     }
                 }
                 RecordState.Loading -> RarLoadingProgressIndicator()
                 is RecordState.Success -> {
                     if(state.records.isEmpty()) {
-                        Image(painter = painterResource(R.drawable.no_data), contentDescription = "no_data")
+                        Column(
+                            modifier = Modifier.align(Alignment.Center),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ){
+                            Image(painter = painterResource(R.drawable.no_data), contentDescription = "no_data", Modifier.size(164.dp))
+                            Text("Empty Records.", textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineMedium)
+                        }
                     } else{
                         RecordLayout(currentLayout, state.records, Modifier.align(Alignment.TopStart),  onRecordClick = onRecordClick)
                     }
@@ -352,7 +362,7 @@ fun RecordLayout(
 ) {
     AnimatedContent(modifier = modifier, targetState = currentLayout) { layout ->
         when(layout){
-            Layout.CARD -> RecordCardLayout(records)
+            Layout.CARD -> RecordCardLayout(records, onRecordClick = onRecordClick)
             Layout.TABLE -> RecordTableLayout(records, onRecordClick = onRecordClick)
         }
     }

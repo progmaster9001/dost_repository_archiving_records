@@ -16,9 +16,7 @@ import com.ojtapp.mobile.screens.FilePickerRoute
 import kotlinx.serialization.Serializable
 
 @Serializable
-data object FilePickerGraph{
-
-}
+data object FilePickerGraph
 
 @Serializable
 data class FilerPicker(val path: String)

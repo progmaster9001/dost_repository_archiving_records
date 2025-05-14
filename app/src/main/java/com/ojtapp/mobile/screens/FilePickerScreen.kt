@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,6 +29,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -56,7 +58,7 @@ fun FilePickerRoute(
 
     val state by produceState<FilePickerState>(initialValue = FilePickerState.Loading) {
         value = try {
-            delay(1000)
+            delay(500)
             val resource = ServiceLocator.currentRepositoryProvider.value.fileRepository.fetchFiles(currentPath)
             when(resource){
                 is Resource.Error -> FilePickerState.Error(resource.message)
@@ -114,16 +116,16 @@ fun FilePickerScreen(
                             modifier = Modifier.align(Alignment.Center),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Image(painter = painterResource(R.drawable.error_data), contentDescription = "error_data")
-                            Spacer(Modifier.height(2.dp))
-                            Text(it.error, fontSize = 16.sp)
+                            Image(painter = painterResource(R.drawable.error_data), contentDescription = "error_data", Modifier.size(164.dp))
+                            Text(it.error, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, style = MaterialTheme.typography.headlineMedium)
                         }
                     }
                     FilePickerState.Loading -> RarLoadingProgressIndicator()
                     is FilePickerState.Success -> {
                         val files = it.response?.files ?: emptyList()
                         if(files.isEmpty()){
-                            Image(painter = painterResource(R.drawable.no_data), contentDescription = "no_data")
+                            Image(painter = painterResource(R.drawable.no_data), contentDescription = "no_data", Modifier.size(164.dp))
+                            Text("Empty Records.", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineMedium)
                         }else{
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize().padding(innerPadding).padding(bottom = 32.dp),

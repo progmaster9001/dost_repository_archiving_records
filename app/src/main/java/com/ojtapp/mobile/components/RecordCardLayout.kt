@@ -48,7 +48,8 @@ private fun RecordHeader(title: String) {
 @Composable
 fun RecordCardLayout(
     records: List<Record>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRecordClick: (Pair<String, String>?) -> Unit
 ) {
 
     LazyColumn(
@@ -107,7 +108,7 @@ fun RecordCardLayout(
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
                 ) {
-                    RecordCard(record = record)
+                    RecordCard(record = record, onRecordClick = onRecordClick)
                 }
             }
         }
@@ -118,10 +119,17 @@ fun RecordCardLayout(
 
 @Composable
 fun RecordCard(
+    modifier: Modifier = Modifier,
     record: Record,
-    modifier: Modifier = Modifier
+    onRecordClick: (Pair<String, String>?) -> Unit
 ) {
     Card(
+        onClick = {
+            when(record){
+                is GiaRecord -> onRecordClick(Pair(record.projectTitle, record.fileLocation))
+                is SetupRecord -> onRecordClick(Pair(record.firmName,record.fileLocation ?: ""))
+            }
+        },
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 4.dp),
