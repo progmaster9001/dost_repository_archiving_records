@@ -62,7 +62,6 @@ fun RecordTableLayout(
                 )
             }
         }else{
-            item { RarPieChart(records = records) }
 
             item {
                 Box(

@@ -6,12 +6,14 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,6 +23,10 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.PageSize
+import androidx.compose.foundation.pager.PagerDefaults
+import androidx.compose.foundation.pager.VerticalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
@@ -48,6 +54,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.addOutline
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -55,6 +62,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -332,6 +340,11 @@ fun RecordsContainer(
     recordsState: RecordState,
     onRecordClick: (Pair<String, String>?) -> Unit
 ) {
+    val pagerState = rememberPagerState(
+        pageCount = { 2 },
+    )
+
+
     AnimatedContent(
         targetState = recordsState,
     ) { state ->
@@ -357,7 +370,52 @@ fun RecordsContainer(
                             Text("Empty Records.", textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineMedium)
                         }
                     } else{
-                        RecordLayout(currentLayout, state.records, Modifier.align(Alignment.TopStart),  onRecordClick = onRecordClick)
+                        VerticalPager(
+                            state = pagerState,
+                            pageSize = object : PageSize {
+                                override fun Density.calculateMainAxisPageSize(
+                                    availableSpace: Int,
+                                    pageSpacing: Int
+                                ): Int {
+                                    return (availableSpace - 2 * pageSpacing) / 2
+                                }
+                            },
+                            pageNestedScrollConnection = if (pagerState.currentPage == 1) {
+                                object : NestedScrollConnection {}
+                            } else {
+                                PagerDefaults.pageNestedScrollConnection(state = pagerState, orientation = Orientation.Vertical)
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        ) { page ->
+                            when (page) {
+                                0 -> {
+                                    val title = when(state.records.firstOrNull()){
+                                        is GiaRecord -> "Total Project Cost per Programs"
+                                        is SetupRecord -> "Total Amount Approved per Sectors"
+                                        else -> ""
+                                    }
+                                    Column(
+                                        modifier = Modifier.align(Alignment.Center),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(title, textAlign = TextAlign.Center,
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.titleLarge
+                                        )
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                        RarPieChart(
+                                            records = state.records
+                                        )
+                                    }
+                                }
+                                1 -> RecordLayout(
+                                    currentLayout = currentLayout,
+                                    records = state.records,
+                                    modifier = Modifier.fillMaxSize(),
+                                    onRecordClick = onRecordClick
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -420,7 +478,7 @@ fun RarPieChart(modifier: Modifier = Modifier, records: List<Record>) {
     }
 
     PieChart(
-        modifier = modifier.size(328.dp),
+        modifier = modifier.size(278.dp),
         pieChartData = data,
         ratioLineColor = Color.LightGray,
         legendPosition = LegendPosition.BOTTOM,
