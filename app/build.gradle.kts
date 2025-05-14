@@ -63,4 +63,5 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(kotlin("reflect"))
     implementation(libs.lottie.compose)
+    implementation(libs.chart)
 }

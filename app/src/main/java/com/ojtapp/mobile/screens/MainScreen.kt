@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -58,6 +59,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.aay.compose.baseComponents.model.LegendPosition
+import com.aay.compose.donutChart.PieChart
+import com.aay.compose.donutChart.model.PieChartData
 import com.ojtapp.mobile.R
 import com.ojtapp.mobile.components.Dimensions
 import com.ojtapp.mobile.components.FilterContent
@@ -75,9 +79,15 @@ import com.ojtapp.mobile.components.YearDropdownMenu
 import com.ojtapp.mobile.components.util.GiaRecordFilterCriteria
 import com.ojtapp.mobile.components.util.SetupRecordFilterCriteria
 import com.ojtapp.mobile.components.util.countFilters
+import com.ojtapp.mobile.model.GiaClass
+import com.ojtapp.mobile.model.GiaRecord
 import com.ojtapp.mobile.model.Record
+import com.ojtapp.mobile.model.SectorType
+import com.ojtapp.mobile.model.SetupRecord
 import com.ojtapp.mobile.model.Type
 import com.ojtapp.mobile.model.User
+import com.ojtapp.mobile.model.giaClassColors
+import com.ojtapp.mobile.model.sectorTypeColors
 import com.ojtapp.mobile.viewmodels.DialogEvent
 import com.ojtapp.mobile.viewmodels.DialogState
 import com.ojtapp.mobile.viewmodels.FilterEvent
@@ -149,8 +159,6 @@ fun MainRoute(
     )
 }
 
-val LocalRecordTab = staticCompositionLocalOf { Type.GIA }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MainScreen(
@@ -221,10 +229,15 @@ private fun MainScreen(
             }
         }
         Column(
-            modifier = Modifier.padding(innerPadding).fillMaxWidth()
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxWidth()
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp).padding(bottom = 16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp)
+                    .padding(bottom = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 val records = when(recordsState){
@@ -266,7 +279,6 @@ fun AppHeader(
     toggleDialog: (DialogEvent) -> Unit,
     resetFilter: () -> Unit
 ) {
-
     Box(modifier = Modifier.background(MaterialTheme.colorScheme.surfaceBright)){
         Column(
             modifier = Modifier
@@ -366,6 +378,60 @@ fun RecordLayout(
             Layout.TABLE -> RecordTableLayout(records, onRecordClick = onRecordClick)
         }
     }
+}
+
+@Composable
+fun RarPieChart(modifier: Modifier = Modifier, records: List<Record>) {
+    val firstRecord = records.firstOrNull()
+
+    val names = when(firstRecord){
+        is GiaRecord -> GiaClass.entries.map { it.value }
+        is SetupRecord -> SectorType.entries.map { it.value }
+        else -> emptyList()
+    }
+
+    val data = names.map { name ->
+        when (firstRecord) {
+            is GiaRecord -> {
+                val total = (records as List<GiaRecord>)
+                    .filter { name == GiaClass.from(it.className)?.value }
+                    .sumOf { it.projectCost }
+
+                PieChartData(
+                    data = total,
+                    partName = name,
+                    color = giaClassColors[GiaClass.from(name)] ?: Color.Gray
+                )
+            }
+            is SetupRecord -> {
+                val total = (records as List<SetupRecord>)
+                    .filter { name == SectorType.from(it.sector)?.value }
+                    .sumOf { it.amountApproved ?: 0.0 }
+
+                PieChartData(
+                    data = total,
+                    partName = name,
+                    color = sectorTypeColors[SectorType.from(name)] ?: Color.Gray
+                )
+            }
+
+            else -> PieChartData(data = 0.0, partName = "unknown", color = Color.White)
+        }
+    }
+
+    PieChart(
+        modifier = modifier.size(328.dp),
+        pieChartData = data,
+        ratioLineColor = Color.LightGray,
+        legendPosition = LegendPosition.BOTTOM,
+        textRatioStyle = TextStyle(color = Color.Gray),
+    )
+}
+
+@Composable
+fun RarRadarChart(modifier: Modifier = Modifier, records: List<Record>) {
+
+    val adsf = ""
 }
 
 fun Modifier.shadowWithClipIntersect(

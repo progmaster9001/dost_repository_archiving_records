@@ -1,5 +1,6 @@
 [versions]
 agp = "8.8.1"
+chart = "1.1.0"
 composeCharts = "latest_version"
 converterGson = "2.9.0"
 kotlin = "2.0.0"
@@ -21,6 +22,7 @@ uiTextGoogleFonts = "1.7.8"
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
+chart = { module = "io.github.thechance101:chart", version.ref = "chart" }
 compose-charts = { module = "io.github.ehsannarmani:compose-charts", version.ref = "composeCharts" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

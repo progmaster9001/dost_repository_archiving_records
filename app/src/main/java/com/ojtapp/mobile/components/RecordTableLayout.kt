@@ -4,8 +4,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
@@ -21,10 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,21 +27,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.ojtapp.mobile.model.GiaRecord
 import com.ojtapp.mobile.model.Record
 import com.ojtapp.mobile.model.SetupRecord
-import com.ojtapp.mobile.model.Type
 import com.ojtapp.mobile.model.getFieldValue
 import com.ojtapp.mobile.model.giaFieldNames
 import com.ojtapp.mobile.model.setupFieldNames
-import com.ojtapp.mobile.screens.LocalRecordTab
+import com.ojtapp.mobile.screens.RarPieChart
 import kotlinx.coroutines.launch
 
 @Composable
@@ -55,8 +47,6 @@ fun RecordTableLayout(
     modifier: Modifier = Modifier,
     onRecordClick: (Pair<String, String>?) -> Unit
 ) {
-
-
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -68,10 +58,12 @@ fun RecordTableLayout(
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = "No records found.",
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
         }else{
+            item { RarPieChart(records = records) }
+
             item {
                 Box(
                     modifier = Modifier
@@ -112,21 +104,15 @@ fun RecordTableLayout(
                     Box(
                         modifier = Modifier.animateItem()
                     ) {
-                        Column(
+                        Box(
                             modifier = Modifier.fillMaxWidth().clickable {
                                 when(record){
                                     is GiaRecord -> onRecordClick(Pair(record.projectTitle, record.fileLocation))
                                     is SetupRecord -> onRecordClick(Pair(record.firmName,record.fileLocation ?: ""))
                                 }
                             }
-                        ) {
+                        ){
                             RarRecord(record)
-                            if (index != records.lastIndex) {
-                                HorizontalDivider(
-                                    thickness = 0.5.dp,
-                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)
-                                )
-                            }
                         }
                     }
                 }
@@ -182,7 +168,6 @@ fun RarRecord(
                     value = value,
                     index = index,
                     fontWeight = if (index == 0) FontWeight.SemiBold else null,
-                    specialStyling = if(LocalRecordTab.current == Type.GIA) index == 6 else index == 8
                 )
             }
         }
@@ -196,7 +181,6 @@ fun RarCell(
     color: Color = LocalContentColor.current,
     fontWeight: FontWeight? = null,
     isHeader: Boolean = false,
-    specialStyling: Boolean = false,
     index: Int,
 ) {
     val width = when (index) {
@@ -208,52 +192,18 @@ fun RarCell(
     Box(
         modifier = modifier
             .heightIn(min = 40.dp)
-            .width(width),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        if (specialStyling) {
-            StatusPill(value = value)
-        } else {
-            Text(
-                text = value,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = color,
-                fontWeight = fontWeight ?: FontWeight.Normal,
-                style = if (isHeader) MaterialTheme.typography.labelMedium else MaterialTheme.typography.bodySmall,
-            )
-        }
-    }
-}
-
-@Composable
-fun StatusPill(value: String) {
-    val backgroundColor = when (value) {
-        "Ongoing" -> Color(0xFFD1FAE5) // green-ish
-        "Completed" -> Color(0xFFDBEAFE) // blue-ish
-        "Terminated" -> Color(0xFFE0E0E0) // gray
-        else -> Color.Transparent // fallback soft blue
-    }
-
-    val textColor = when (value) {
-        "Ongoing" -> Color(0xFF065F46)
-        "Completed" -> Color(0xFF1D4ED8)
-        "Terminated" -> Color(0xFF806B74)
-        else -> LocalTextStyle.current.color
-    }
-
-    Box(
-        modifier = Modifier
-            .background(backgroundColor, shape = RoundedCornerShape(50))
-            .padding(horizontal = 4.dp, vertical = 2.dp),
-        contentAlignment = Alignment.Center
+            .width(width)
+            .padding(end = 16.dp)
+        ,
+        contentAlignment = Alignment.TopStart
     ) {
         Text(
             text = value,
-            color = textColor,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+            color = color,
+            fontWeight = fontWeight ?: FontWeight.Normal,
+            style = if (isHeader) MaterialTheme.typography.labelMedium else MaterialTheme.typography.bodySmall,
         )
     }
 }

@@ -68,7 +68,6 @@ fun RecordCardLayout(
                 )
             }
         } else {
-
             items(
                 items = records,
                 key = { record ->
@@ -189,13 +188,13 @@ private fun FieldItem(label: String, value: String) {
         Text(
             text = "$label:",
             style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.weight(.35f)
         )
-        Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = value,
             textAlign = TextAlign.Right,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(.65f),
             style = MaterialTheme.typography.bodySmall
         )
     }
