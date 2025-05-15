@@ -31,22 +31,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 object MainGraph
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun RarNavigationHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
-
-    val hasToken = ServiceLocator.currentRepositoryProvider
-        .flatMapLatest { provider ->
-            provider.userRepository.user
-        }
-        .map { user -> user.token.isNotEmpty() }.collectAsStateWithLifecycle(initialValue = false)
-
-    LaunchedEffect(hasToken.value) {
-        if(hasToken.value){
-            navController.navigateToHomeScreen()
-        }
-    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp)
