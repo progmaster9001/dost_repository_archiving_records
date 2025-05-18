@@ -48,7 +48,7 @@ fun TypeTabRow(
         modifier = Modifier,
         shape = RoundedCornerShape(70f),
         color = MaterialTheme.colorScheme.inverseSurface,
-        shadowElevation = 4.dp
+        shadowElevation = 2.dp
     ) {
         Row(
             modifier = Modifier

@@ -1,6 +1,7 @@
 package com.ojtapp.mobile.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,25 +15,36 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SelectableChipColors
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,12 +53,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ojtapp.mobile.components.util.FilterCriteria
 import com.ojtapp.mobile.model.GiaClass
@@ -56,6 +73,8 @@ import com.ojtapp.mobile.components.util.SetupRecordFilterCriteria
 import com.ojtapp.mobile.model.Status
 import com.ojtapp.mobile.model.Type
 import com.ojtapp.mobile.components.util.isSame
+import com.ojtapp.mobile.model.giaClassColors
+import com.ojtapp.mobile.model.sectorTypeColors
 import com.ojtapp.mobile.viewmodels.FilterEvent
 import kotlinx.coroutines.launch
 
@@ -72,7 +91,7 @@ fun FilterSheet(
         modifier = Modifier.systemBarsPadding(),
         scrimColor = BottomSheetDefaults.ScrimColor.copy(alpha = .2f),
         sheetState = sheetState,
-        shape = RectangleShape,
+        shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
         dragHandle = null,
         content = content
     )
@@ -89,7 +108,6 @@ fun FilterContent(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(Dimensions.containerPadding)
             .imePadding(),
         contentAlignment = Alignment.TopEnd
     ) {
@@ -113,7 +131,6 @@ fun GiaFilterContent(
 ) {
     var projectTitle by remember { mutableStateOf(giaFilterState.projectTitleContains ?: "") }
     var location by remember { mutableStateOf(giaFilterState.locationContains ?: "") }
-    var classNameContains by remember { mutableStateOf(giaFilterState.classContains ?: "") }
     var beneficiaryContains by remember { mutableStateOf(giaFilterState.beneficiaryContains ?: "") }
     var remarksContains by remember { mutableStateOf(giaFilterState.remarksContains ?: "") }
     var minProjectCost by remember { mutableStateOf(giaFilterState.minProjectCost?.toString() ?: "") }
@@ -126,10 +143,10 @@ fun GiaFilterContent(
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
 
     val isSame = giaFilterState.isSame(
-        projectTitle, location, classNameContains, beneficiaryContains, remarksContains, minProjectCost, maxProjectCost, selectedClasses
+        projectTitle, location, beneficiaryContains, remarksContains, minProjectCost, maxProjectCost, selectedClasses
     )
     val areFieldsNotEmpty = atLeastOneNotEmpty(
-        projectTitle, location, classNameContains, beneficiaryContains, remarksContains, minProjectCost, maxProjectCost, selectedClasses
+        projectTitle, location, beneficiaryContains, remarksContains, minProjectCost, maxProjectCost, selectedClasses
     )
     val activateReset = areFieldsNotEmpty && isSame
 
@@ -149,123 +166,112 @@ fun GiaFilterContent(
     Column(
         modifier = modifier.verticalScroll(scrollState)
     ) {
-        Row(verticalAlignment = Alignment.Top) {
-            Text("GIA Filter", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(vertical = 12.dp, horizontal = 18.dp)
+        ) {
+            Text("GIA Filter", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "close_bottom_sheet",
                 modifier = Modifier.clickable(onClick = onDismissRequest)
             )
         }
-
-        OutlinedTextField(
-            value = projectTitle,
-            onValueChange = { projectTitle = it },
-            label = { Text("Project Title") },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester)
-                .onFocusChanged {
-                    if (it.isFocused) {
-                        coroutineScope.launch { bringIntoViewRequester.bringIntoView() }
-                    }
-                }
-        )
-
-        // --- Input fields ---
-        OutlinedTextField(
-            value = location,
-            onValueChange = { location = it },
-            label = { Text("Location") },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-        )
-
-        OutlinedTextField(
-            value = classNameContains,
-            onValueChange = { classNameContains = it },
-            label = { Text("Class Name Contains") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        OutlinedTextField(
-            value = beneficiaryContains,
-            onValueChange = { beneficiaryContains = it },
-            label = { Text("Beneficiary Contains") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        OutlinedTextField(
-            value = remarksContains,
-            onValueChange = { remarksContains = it },
-            label = { Text("Remarks Contains") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Row {
-            OutlinedTextField(
-                value = minProjectCost,
-                onValueChange = { minProjectCost = it },
-                label = { Text("Min Project Cost") },
-                singleLine = true,
-                modifier = Modifier.weight(1f)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            OutlinedTextField(
-                value = maxProjectCost,
-                onValueChange = { maxProjectCost = it },
-                label = { Text("Max Project Cost") },
-                singleLine = true,
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        MultiSelectChipRow(
-            title = "Select Multiple Classes",
-            options = GiaClass.entries.map { it.value },
-            selectedOptions = selectedClasses,
-            onSelectionChanged = { selectedClasses = it }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                if (activateReset) {
-                    projectTitle = ""
-                    location = ""
-                    classNameContains = ""
-                    beneficiaryContains = ""
-                    remarksContains = ""
-                    minProjectCost = ""
-                    maxProjectCost = ""
-                    selectedClasses = emptyList()
-                } else {
-                    applyFilter(
-                        GiaRecordFilterCriteria(
-                            projectTitleContains = projectTitle.ifBlank { null },
-                            locationContains = location.ifBlank { null },
-                            classContains = classNameContains.ifBlank { null },
-                            beneficiaryContains = beneficiaryContains.ifBlank { null },
-                            remarksContains = remarksContains.ifBlank { null },
-                            minProjectCost = minProjectCost.toDoubleOrNull(),
-                            maxProjectCost = maxProjectCost.toDoubleOrNull(),
-                            classesIn = selectedClasses.ifEmpty { null }
-                        )
-                    )
-                }
-            },
-            colors = buttonColors,
-            enabled = areFieldsNotEmpty || !isSame,
-            shape = RoundedCornerShape(20.dp),
-            modifier = Modifier.fillMaxWidth()
+        HorizontalDivider()
+        Column(
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(buttonText, fontWeight = FontWeight.Bold)
+            MultiSelectChipRow(
+                title = "Select Multiple Classes",
+                options = GiaClass.entries.map { it.value },
+                selectedOptions = selectedClasses,
+                onSelectionChanged = { selectedClasses = it }
+            )
+
+            HorizontalDivider()
+
+            FilterTextField(
+                title = "Project Title",
+                value = projectTitle,
+                placeHolder = "BioFloss",
+                onValueChange = { projectTitle = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .onFocusChanged {
+                        if (it.isFocused) {
+                            coroutineScope.launch { bringIntoViewRequester.bringIntoView() }
+                        }
+                    }
+            )
+
+            FilterTextField(
+                title = "Beneficiary",
+                value = beneficiaryContains,
+                placeHolder = "Juan Dela Cruz",
+                onValueChange = { beneficiaryContains = it }
+            )
+
+            FilterTextField(
+                title = "Location",
+                value = location,
+                placeHolder = "Pagadian City",
+                onValueChange = { location = it }
+            )
+
+            FilterTextField(
+                title = "Remarks",
+                value = location,
+                placeHolder = "",
+                onValueChange = { remarksContains = it }
+            )
+
+            FilterTextField(
+                title = "Min Cost",
+                value = minProjectCost,
+                placeHolder = "0.0",
+                onValueChange = { minProjectCost = it }
+            )
+
+            FilterTextField(
+                title = "Max Cost",
+                value = maxProjectCost,
+                placeHolder = "0.0",
+                onValueChange = { maxProjectCost = it }
+            )
+
+            Button(
+                onClick = {
+                    if (activateReset) {
+                        projectTitle = ""
+                        location = ""
+                        beneficiaryContains = ""
+                        remarksContains = ""
+                        minProjectCost = ""
+                        maxProjectCost = ""
+                        selectedClasses = emptyList()
+                    } else {
+                        applyFilter(
+                            GiaRecordFilterCriteria(
+                                projectTitleContains = projectTitle.ifBlank { null },
+                                locationContains = location.ifBlank { null },
+                                beneficiaryContains = beneficiaryContains.ifBlank { null },
+                                remarksContains = remarksContains.ifBlank { null },
+                                minProjectCost = minProjectCost.toDoubleOrNull(),
+                                maxProjectCost = maxProjectCost.toDoubleOrNull(),
+                                classesIn = selectedClasses.ifEmpty { null }
+                            )
+                        )
+                    }
+                },
+                colors = buttonColors,
+                enabled = areFieldsNotEmpty || !isSame,
+                shape = RoundedCornerShape(20f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(buttonText, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
@@ -312,97 +318,98 @@ fun SetupFilterContent(
             .verticalScroll(scrollState),
     ) {
         Row(
-            verticalAlignment = Alignment.Top
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(vertical = 12.dp, horizontal = 18.dp)
         ) {
-            Text("SETUP Filter", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+            Text("SETUP Filter", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
             Icon(imageVector = Icons.Default.Close, contentDescription = "close_bottom_sheet", modifier.clickable(onClick = onDismissRequest))
         }
-
-        MultiSelectChipRow(
-            title = "Select Multiple Sectors",
-            options = SectorType.entries.map { it.value },
-            selectedOptions = selectedSectors,
-            onSelectionChanged = { selectedSectors = it }
-        )
-
-
-        MultiSelectChipRow(
-            title = "Select Multiple Statuses",
-            options = Status.entries.map { it.value },
-            selectedOptions = selectedStatuses,
-            onSelectionChanged = { selectedStatuses = it }
-        )
-
-        OutlinedTextField(
-            value = proponentContains,
-            onValueChange = { proponentContains = it },
-            label = { Text("Proponent Contains") },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester)
-                .onFocusChanged { state ->
-                    if (state.isFocused) {
-                        coroutineScope.launch { bringIntoViewRequester.bringIntoView() }
-                    }
-                }
-        )
-
-        OutlinedTextField(
-            value = firmNameContains,
-            onValueChange = { firmNameContains = it },
-            label = { Text("Firm Name Contains") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Row {
-            OutlinedTextField(
-                value = minAmountApproved,
-                onValueChange = { minAmountApproved = it },
-                label = { Text("Min Amount Approved", maxLines = 1) },
-                singleLine = true,
-                modifier = Modifier.weight(1f)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            OutlinedTextField(
-                value = maxAmountApproved,
-                onValueChange = { maxAmountApproved = it },
-                label = { Text("Max Amount Approved", maxLines = 1) },
-                singleLine = true,
-                modifier = Modifier
-                    .weight(1f)
-            )
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = {
-                if(activateReset){
-                    selectedSectors = emptyList()
-                    selectedStatuses = emptyList()
-                    proponentContains = ""
-                    firmNameContains = ""
-                    minAmountApproved = ""
-                    maxAmountApproved = ""
-                }else{
-                    applyFilter(
-                        SetupRecordFilterCriteria(
-                            sectorIn = selectedSectors.ifEmpty { null },
-                            statusIn = selectedStatuses.ifEmpty { null },
-                            proponentContains = proponentContains.ifBlank { null },
-                            firmNameContains = firmNameContains.ifBlank { null },
-                            minAmountApproved = minAmountApproved.toDoubleOrNull(),
-                            maxAmountApproved = maxAmountApproved.toDoubleOrNull()
-                        )
-                    )
-                }
-            },
-            colors = buttonColors,
-            enabled = areFieldsNotEmpty || !isSame,
-            shape = RoundedCornerShape(20f),
-            modifier = Modifier.fillMaxWidth()
+        HorizontalDivider()
+        Column(
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(text, fontWeight = FontWeight.Bold)
+            MultiSelectChipRow(
+                title = "Select Multiple Sectors",
+                options = SectorType.entries.map { it.value },
+                selectedOptions = selectedSectors,
+                onSelectionChanged = { selectedSectors = it }
+            )
+
+            HorizontalDivider()
+
+            MultiSelectChipRow(
+                title = "Select Multiple Statuses",
+                options = Status.entries.map { it.value },
+                selectedOptions = selectedStatuses,
+                onSelectionChanged = { selectedStatuses = it }
+            )
+
+            HorizontalDivider()
+
+            FilterTextField(
+                title = "Firm",
+                value = firmNameContains,
+                placeHolder = "BioFloss",
+                onValueChange = { firmNameContains = it }
+            )
+
+            FilterTextField(
+                title = "Proponent",
+                value = proponentContains,
+                placeHolder = "Juan Dela Cruz",
+                onValueChange = { proponentContains = it },
+                modifier = Modifier.focusRequester(focusRequester)
+                    .onFocusChanged { state ->
+                        if (state.isFocused) {
+                            coroutineScope.launch { bringIntoViewRequester.bringIntoView() }
+                        }
+                    }
+            )
+
+            FilterTextField(
+                title = "Min Amount",
+                value = minAmountApproved,
+                placeHolder = "0.0",
+                onValueChange = { minAmountApproved = it }
+            )
+
+            FilterTextField(
+                title = "Max Amount",
+                value = maxAmountApproved,
+                placeHolder = "0.0",
+                onValueChange = { maxAmountApproved = it }
+            )
+
+            Button(
+                onClick = {
+                    if(activateReset){
+                        selectedSectors = emptyList()
+                        selectedStatuses = emptyList()
+                        proponentContains = ""
+                        firmNameContains = ""
+                        minAmountApproved = ""
+                        maxAmountApproved = ""
+                    }else{
+                        applyFilter(
+                            SetupRecordFilterCriteria(
+                                sectorIn = selectedSectors.ifEmpty { null },
+                                statusIn = selectedStatuses.ifEmpty { null },
+                                proponentContains = proponentContains.ifBlank { null },
+                                firmNameContains = firmNameContains.ifBlank { null },
+                                minAmountApproved = minAmountApproved.toDoubleOrNull(),
+                                maxAmountApproved = maxAmountApproved.toDoubleOrNull()
+                            )
+                        )
+                    }
+                },
+                colors = buttonColors,
+                enabled = areFieldsNotEmpty || !isSame,
+                shape = RoundedCornerShape(20f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
@@ -428,6 +435,37 @@ fun MultiSelectChipRow(
                 val selected = option in selectedOptions
                 FilterChip(
                     selected = selected,
+                    leadingIcon = {
+                        (giaClassColors + sectorTypeColors).entries.find {
+                            it.key == SectorType.from(option) || it.key == GiaClass.from(option)
+                        }?.value?.let {
+                            Box(
+                                modifier = Modifier
+                                    .size(12.dp)
+                                    .clip(CircleShape)
+                                    .background(it)
+                            )
+                        }
+                    },
+                    shape = RoundedCornerShape(10.dp),
+                    border = null,
+                    colors = SelectableChipColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        labelColor = MaterialTheme.colorScheme.onSurface,
+                        leadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        trailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.12f),
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                        disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+                        disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+
+                        selectedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        disabledSelectedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.12f),
+                        selectedLabelColor = MaterialTheme.colorScheme.onSurface,
+                        selectedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        selectedTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
                     onClick = {
                         val newSelection = if (selected) {
                             selectedOptions - option
@@ -441,6 +479,63 @@ fun MultiSelectChipRow(
             }
         }
     }
+}
+
+@Composable
+fun FilterTextField(
+    title: String,
+    placeHolder: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val textStyle = MaterialTheme.typography.bodyMedium.copy(
+        fontWeight = FontWeight.Medium,
+        color = MaterialTheme.colorScheme.onSurface
+    )
+
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        singleLine = true,
+        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+        textStyle = textStyle.copy(
+            fontWeight = FontWeight.Normal
+        ),
+        decorationBox = { innerTextField ->
+            Row(
+                modifier = modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "$title: ",
+                    style = textStyle.copy(
+                        textAlign = TextAlign.Right
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(.3f)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Box(
+                    modifier = Modifier.height(38.dp).weight(.7f).clip(OutlinedTextFieldDefaults.shape).background(
+                        MaterialTheme.colorScheme.surfaceContainer
+                    ),
+                    contentAlignment = Alignment.CenterStart
+                ){
+                    Row {
+                        Spacer(Modifier.width(12.dp))
+                        Box{
+                            if(value.isEmpty()){
+                                Text(text = placeHolder, style = textStyle.copy(color = MaterialTheme.colorScheme.outline))
+                            }
+                            innerTextField()
+                        }
+                    }
+                }
+            }
+        }
+    )
 }
 
 fun atLeastOneNotEmpty(vararg values: Any?): Boolean {

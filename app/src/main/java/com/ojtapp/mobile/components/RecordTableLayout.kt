@@ -4,21 +4,27 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.Surface
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -32,13 +38,18 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.ojtapp.mobile.model.GiaClass
 import com.ojtapp.mobile.model.GiaRecord
 import com.ojtapp.mobile.model.Record
+import com.ojtapp.mobile.model.SectorType
 import com.ojtapp.mobile.model.SetupRecord
 import com.ojtapp.mobile.model.getFieldValue
+import com.ojtapp.mobile.model.giaClassColors
 import com.ojtapp.mobile.model.giaFieldNames
+import com.ojtapp.mobile.model.sectorTypeColors
 import com.ojtapp.mobile.model.setupFieldNames
 import com.ojtapp.mobile.screens.RarPieChart
+import com.ojtapp.mobile.screens.shadowWithClipIntersect
 import kotlinx.coroutines.launch
 
 @Composable
@@ -62,14 +73,8 @@ fun RecordTableLayout(
                 )
             }
         }else{
-
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    RecordHeader(records)
-                }
+                RecordHeader(records)
             }
 
             itemsIndexed(records, key = {i, _ -> i}) { index, record ->
@@ -93,28 +98,42 @@ fun RecordTableLayout(
                         )
                     }
                 }
-                Box(
-                    modifier = Modifier.graphicsLayer {
-                        this.scaleX = scale.value
-                        this.scaleY = scale.value
-                        this.alpha = alpha.value
-                    }
-                ){
+                Row{
+                    Box(modifier = Modifier
+                        .height(56.dp)
+                        .width(5.dp)
+                        .background(
+                            when(record){
+                                is GiaRecord -> giaClassColors[GiaClass.from(record.className)]
+                                is SetupRecord -> sectorTypeColors[SectorType.from(record.sector)]
+                                else -> Color.Unspecified
+                            } ?: Color.Unspecified
+                        )
+                    )
                     Box(
-                        modifier = Modifier.animateItem()
-                    ) {
+                        modifier = Modifier.graphicsLayer {
+                            this.scaleX = scale.value
+                            this.scaleY = scale.value
+                            this.alpha = alpha.value
+                        }
+                    ){
                         Box(
-                            modifier = Modifier.fillMaxWidth().clickable {
-                                when(record){
-                                    is GiaRecord -> onRecordClick(Pair(record.projectTitle, record.fileLocation))
-                                    is SetupRecord -> onRecordClick(Pair(record.firmName,record.fileLocation ?: ""))
+                            modifier = Modifier.animateItem()
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxWidth().clickable {
+                                    when(record){
+                                        is GiaRecord -> onRecordClick(Pair(record.projectTitle, record.fileLocation))
+                                        is SetupRecord -> onRecordClick(Pair(record.firmName,record.fileLocation ?: ""))
+                                    }
                                 }
+                            ){
+                                RarRecord(record)
                             }
-                        ){
-                            RarRecord(record)
                         }
                     }
                 }
+                Spacer(Modifier.height(2.dp))
             }
         }
     }
@@ -131,16 +150,16 @@ fun RecordHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp)
-            .padding(horizontal = 16.dp),
+            .padding(vertical = 8.dp, horizontal = 32.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         fieldNames.forEachIndexed { index, column ->
             RarCell(
                 value = column,
                 index = index,
+                alignment = Alignment.CenterStart,
                 fontWeight = FontWeight.Bold,
-                isHeader = true
+                isHeader = true,
             )
         }
     }
@@ -177,11 +196,13 @@ fun RarRecord(
 fun RarCell(
     value: String,
     modifier: Modifier = Modifier,
+    alignment: Alignment = Alignment.TopStart,
     color: Color = LocalContentColor.current,
     fontWeight: FontWeight? = null,
     isHeader: Boolean = false,
     index: Int,
 ) {
+
     val width = when (index) {
         0 -> 60.dp  // ID, so way smaller
         1 -> 150.dp // Status pill gets decent breathing room
@@ -194,7 +215,7 @@ fun RarCell(
             .width(width)
             .padding(end = 16.dp)
         ,
-        contentAlignment = Alignment.TopStart
+        contentAlignment = alignment
     ) {
         Text(
             text = value,

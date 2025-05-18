@@ -59,7 +59,7 @@ fun RecordCardLayout(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-
+        item { Spacer(Modifier.height(8.dp)) }
         if (records.isEmpty()) {
             item {
                 Text(
@@ -105,7 +105,7 @@ fun RecordCardLayout(
                             this.alpha = alpha.value
                         }
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp)
+                        .padding(vertical = 4.dp, horizontal = 16.dp)
                 ) {
                     RecordCard(record = record, onRecordClick = onRecordClick)
                 }

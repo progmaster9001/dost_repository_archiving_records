@@ -206,7 +206,6 @@ fun countFilters(
 fun GiaRecordFilterCriteria.isSame(
     projectTitle: String,
     location: String,
-    classNameContains: String,
     beneficiaryContains: String,
     remarksContains: String,
     minProjectCost: String,
@@ -218,7 +217,6 @@ fun GiaRecordFilterCriteria.isSame(
 
     return (this.projectTitleContains ?: "").trim() == projectTitle.trim() &&
             (this.locationContains ?: "").trim() == location.trim() &&
-            (this.classContains ?: "").trim() == classNameContains.trim() &&
             (this.beneficiaryContains ?: "").trim() == beneficiaryContains.trim() &&
             (this.remarksContains ?: "").trim() == remarksContains.trim() &&
             (this.minProjectCost ?: 0.0) == (minCostDouble ?: 0.0) &&

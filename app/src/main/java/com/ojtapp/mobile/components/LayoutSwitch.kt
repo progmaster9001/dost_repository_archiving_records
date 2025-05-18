@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
@@ -44,7 +45,7 @@ fun LayoutSwitch(
     val cornerRadius = RoundedCornerShape(8.dp)
     val textSize = 12.sp
 
-    Box(modifier = modifier){
+    Box(modifier = modifier.padding(8.dp)){
         Surface(
             modifier = Modifier
                 .width(totalWidth)

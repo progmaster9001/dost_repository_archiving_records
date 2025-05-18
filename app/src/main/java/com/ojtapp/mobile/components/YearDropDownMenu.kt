@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun YearDropdownMenu(
     modifier: Modifier = Modifier,
-    startYear: Int = 2010,
-    endYear: Int = 2025,
+    startYear: Int = 2000,
+    endYear: Int = 2030,
     selectedYear: Int?,
     onYearSelected: (Int?) -> Unit
 ) {
